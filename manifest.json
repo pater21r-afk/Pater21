@@ -1,0 +1,10 @@
+{
+  "name": "RCT",
+  "short_name": "RCT",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#111113",
+  "theme_color": "#111113",
+  "description": "RCT Random Choice Timer",
+  "icons": []
+}
