@@ -1,1 +1,9 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.pater21r_afk.twa",
+        "sha256_cert_fingerprints": ["E4:15:96:88:6B:C3:E7:1B:E9:9E:C1:82:50:17:11:6A:96:03:C5:E5:6D:94:DC:7F:D7:E0:FD:E0:78:7B:48:AB"]
+      }
+    }]
 
