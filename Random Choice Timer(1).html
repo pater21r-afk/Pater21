@@ -1,0 +1,167 @@
+<div id="rt-app">
+  <style>
+    #rt-app{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100%;box-sizing:border-box;padding:18px;background:light-dark(#f5f5f7,#111113);color:light-dark(#151515,#f5f5f5)}
+    #rt-app *{box-sizing:border-box}
+    .rt-wrap{max-width:620px;margin:0 auto}
+    .rt-title{font-size:28px;font-weight:800;text-align:center;margin:4px 0 18px}
+    @media (display-mode: standalone){#rt-app{min-height:100vh}}
+    .rt-card{background:light-dark(#fff,#1d1d20);border:1px solid light-dark(#ddd,#333);border-radius:22px;padding:18px;margin-bottom:14px}
+    #pageRun .rt-card{background:#9b59b6;color:#fff;border-color:#7d3c98}
+    .rt-label{font-size:14px;font-weight:700;margin-bottom:8px;display:block}
+    textarea,input{width:100%;font:inherit;border:1px solid light-dark(#ccc,#444);border-radius:12px;padding:12px;background:light-dark(#fafafa,#28282c);color:inherit;outline:none}
+    textarea{min-height:92px;resize:vertical}
+    .rt-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .rt-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+    .rt-tab{background:light-dark(#e8e8eb,#36363b);color:inherit}.rt-tab.active{background:#e53935;color:#fff}
+    .rt-page{display:none}.rt-page.active{display:block}
+    .rt-pulse{width:100%;height:130px;display:flex;align-items:center;justify-content:center;margin:12px 0}
+    .rt-pulse-btn{width:130px;height:130px;border-radius:50%;background:#fff;border:6px solid #e6e6e6;transition:transform .16s ease,background .22s ease,box-shadow .22s ease}
+    .rt-pulse-btn.on{background:#39ff14;border-color:#8aff70;box-shadow:0 0 18px rgba(57,255,20,.45),0 0 45px rgba(57,255,20,.8);transform:scale(1.08)}
+    .rt-pulse-btn.pause-on{background:#ff2020;border-color:#ff7070;box-shadow:0 0 45px rgba(255,32,32,.95);transform:scale(1.06)}
+    #rt-app.surprise-active{background:radial-gradient(circle at 50% 42%,#fff8c7 0%,#ffd84a 38%,#d49b00 72%,#8a5a00 100%);color:#3d2600}
+    #rt-app.surprise-active .rt-card{background:linear-gradient(145deg,#fff3a3,#f5c542,#c99100);border-color:#ffe47a;box-shadow:0 0 35px rgba(255,215,60,.85),inset 0 0 25px rgba(255,248,190,.7);color:#3d2600}
+    #rt-app.surprise-active .rt-choice{text-shadow:0 0 12px rgba(255,255,220,.95),0 2px 3px rgba(80,45,0,.35)}
+    .rt-pulse-value{text-align:center;font-size:22px;font-weight:800;margin-top:8px}
+    .rt-result{text-align:center;padding:22px 10px 14px}
+    .rt-choice{font-size:clamp(34px,10vw,64px);font-weight:900;line-height:1.05;min-height:70px;overflow-wrap:anywhere}
+    .rt-time{display:none;font-size:clamp(48px,15vw,86px);font-weight:900;line-height:1;margin:14px 0 18px;font-variant-numeric:tabular-nums}
+    .rt-track{height:18px;border-radius:99px;background:light-dark(#e2e2e5,#37373c);overflow:hidden;margin:0 4px}
+    .rt-bar{height:100%;width:0%;background:#e53935;border-radius:99px;transition:width .1s linear}
+    .rt-status{text-align:center;font-size:14px;min-height:20px;margin-top:10px;color:light-dark(#666,#aaa)}
+    #pageRun .rt-status{display:none}
+    .rt-buttons{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px}
+    .skip{background:light-dark(#e8e8eb,#36363b);color:inherit}
+    button{min-height:52px;border:0;border-radius:14px;font:inherit;font-weight:800;font-size:17px;cursor:pointer;padding:10px 14px}
+    .start{background:#e53935;color:white}.stop{background:light-dark(#e8e8eb,#36363b);color:inherit}
+    .settings-back{background:light-dark(#e8e8eb,#36363b);color:inherit;width:100%;margin-top:12px}
+    .rt-options{display:flex;align-items:center;gap:9px;margin-top:13px;font-size:14px}
+    .rt-options input{width:20px;height:20px;padding:0}
+    .rt-settings-start{display:block!important;width:100%;min-height:58px;margin:18px 0 20px;background:#e53935;color:#fff;border-radius:14px;position:relative;z-index:20;visibility:visible!important;opacity:1!important}
+    .programs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
+    .program-btn{background:light-dark(#e8e8eb,#36363b);color:inherit;min-height:44px;font-size:14px;padding:7px 8px}
+    .program-btn.active{background:#e53935;color:#fff}
+    .program-name{margin-bottom:8px}
+    @media(max-width:420px){#rt-app{padding:12px}.rt-card{padding:14px}.rt-grid{gap:8px}.rt-buttons{gap:8px}}
+  </style>
+  <div class="rt-wrap">
+    <div class="rt-title">Random Choice Timer</div>
+    <div class="rt-tabs"></div>
+    <div class="rt-page active" id="pageSettings">
+    <div class="programs">
+      <button class="program-btn active" data-program="0" type="button">ΠΡΟΓΡΑΜΜΑ 1</button>
+      <button class="program-btn" data-program="1" type="button">ΠΡΟΓΡΑΜΜΑ 2</button>
+      <button class="program-btn" data-program="2" type="button">ΠΡΟΓΡΑΜΜΑ 3</button>
+      <button class="program-btn" data-program="3" type="button">ΠΡΟΓΡΑΜΜΑ 4</button>
+      <button class="program-btn" data-program="4" type="button">ΠΡΟΓΡΑΜΜΑ 5</button>
+      <button class="program-btn" data-program="5" type="button">ΠΡΟΓΡΑΜΜΑ 6</button>
+    </div>
+    <div class="rt-card">
+      <label class="rt-label" for="programName">Όνομα προγράμματος</label>
+      <input class="program-name" id="programName" type="text" maxlength="30" placeholder="Π.χ. Πρόγραμμα προπόνησης">
+    </div>
+    <div class="rt-card">
+      <label class="rt-label" for="choices">Επιλογές — μία σε κάθε γραμμή</label>
+      <textarea id="choices" placeholder="Π.χ.\nΑ\nΒ\nΓ\nΔ"></textarea>
+      <label class="rt-options"><input id="noRepeat" type="checkbox" checked> Να μην εμφανίζεται η ίδια επιλογή δύο φορές συνεχόμενα</label>
+    </div>
+    <div class="rt-card">
+      <label class="rt-label" for="pauseChoices">Επιλογές κατά την παύση — μία σε κάθε γραμμή</label>
+      <textarea id="pauseChoices" placeholder="Π.χ.\nΠΑΥΣΗ 1\nΠΑΥΣΗ 2\nΠΑΥΣΗ 3"></textarea>
+      <label class="rt-options"><input id="pauseNoRepeat" type="checkbox" checked> Να μην εμφανίζεται η ίδια επιλογή δύο φορές συνεχόμενα</label>
+    </div>
+    <div class="rt-card">
+      <div class="rt-grid">
+        <div><label class="rt-label" for="min">Ενέργεια — ελάχιστα sec</label><input id="min" type="number" min="1" max="86400" value="5"></div>
+        <div><label class="rt-label" for="max">Ενέργεια — μέγιστα sec</label><input id="max" type="number" min="1" max="86400" value="15"></div>
+      </div>
+      <div class="rt-grid" style="margin-top:12px">
+        <div><label class="rt-label" for="pauseMin">Παύση — ελάχιστα sec</label><input id="pauseMin" type="number" min="0" max="86400" value="15"></div>
+        <div><label class="rt-label" for="pauseMax">Παύση — μέγιστα sec</label><input id="pauseMax" type="number" min="0" max="86400" value="30"></div>
+      </div>
+    </div>
+    <div class="rt-card">
+      <div class="rt-grid">
+        <div><label class="rt-label" for="pulseMin">Παλμοί/sec — ελάχιστο</label><input id="pulseMin" type="number" min="0.1" max="20" step="0.1" value="0.1"></div>
+        <div><label class="rt-label" for="pulseMax">Παλμοί/sec — μέγιστο</label><input id="pulseMax" type="number" min="0.1" max="4" step="0.1" value="4"></div>
+      </div>
+      <div class="rt-pulse-value"><span id="pulseDisplay">0.1–4.0</span> Hz</div>
+      <div class="rt-status">Σε κάθε νέα ενέργεια επιλέγεται τυχαία ρυθμός μέσα στο εύρος.</div>
+    </div>
+    <div class="rt-card">
+      <label class="rt-options"><input id="surpriseEnabled" type="checkbox"> Τυχαία έκπληξη κατά την προπόνηση</label>
+      <div class="rt-grid" style="margin-top:12px">
+        <div><label class="rt-label" for="surpriseDelay">Έκπληξη — μετά από τουλάχιστον sec</label><input id="surpriseDelay" type="number" min="0" max="86400" value="30"></div>
+        <div><label class="rt-label" for="surpriseChance">Πιθανότητα εμφάνισης %</label><input id="surpriseChance" type="number" min="0" max="100" step="1" value="50"></div>
+      </div>
+      <div class="rt-grid" style="margin-top:12px">
+        <div><label class="rt-label" for="surpriseCount">Μέγιστες εκπλήξεις ανά session</label><input id="surpriseCount" type="number" min="1" max="100" step="1" value="1"></div>
+        <div><label class="rt-label" for="surpriseProgramRandom">Τυχαία επιλογή από το πρόγραμμα</label><input id="surpriseProgramRandom" type="checkbox"></div>
+      </div>
+      <div class="rt-grid" style="margin-top:12px">
+        <div><label class="rt-label" for="surpriseMin">Έκπληξη — ελάχιστα sec</label><input id="surpriseMin" type="number" min="1" max="86400" value="5"></div>
+        <div><label class="rt-label" for="surpriseMax">Έκπληξη — μέγιστα sec</label><input id="surpriseMax" type="number" min="1" max="86400" value="15"></div>
+      </div>
+      <label class="rt-options"><input id="surpriseSessionRandom" type="checkbox"> Αποφασίζεται τυχαία στην αρχή κάθε session αν θα ενεργοποιηθεί</label>
+      <label class="rt-label" for="surpriseChoices" style="margin-top:12px">Επιλογές έκπληξης — μία σε κάθε γραμμή</label>
+      <textarea id="surpriseChoices" placeholder="ΕΝΕΡΓΕΙΑ 1\nΕΝΕΡΓΕΙΑ 2\nΠΑΥΣΗ 1\nΠΑΥΣΗ 2"></textarea>
+    </div>
+    <button class="rt-settings-start" id="settingsStart" type="button">START</button>
+    </div>
+    <div class="rt-page" id="pageRun">
+    <div class="rt-card rt-result">
+      <div class="rt-choice" id="choice">—</div>
+      <div class="rt-time" id="time">00:00</div>
+      <div class="rt-track"><div class="rt-bar" id="bar"></div></div>
+      <div class="rt-pulse"><button class="rt-pulse-btn" id="pulseBtn" type="button" aria-label="Παλμός"></button></div>
+      <div class="rt-status" id="status">Έτοιμο</div>
+      <div class="rt-buttons">
+        <button class="start" id="start" type="button">START</button>
+        <button class="stop" id="stop" type="button">STOP</button>
+        <button class="skip" id="skip" type="button">SKIP</button>
+      </div>
+      <button class="settings-back" id="settingsBack" type="button">⚙ ΡΥΘΜΙΣΕΙΣ</button>
+    </div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    const root=document.getElementById('rt-app');
+    const choicesEl=root.querySelector('#choices'),pauseChoicesEl=root.querySelector('#pauseChoices'),minEl=root.querySelector('#min'),maxEl=root.querySelector('#max'),pauseMinEl=root.querySelector('#pauseMin'),pauseMaxEl=root.querySelector('#pauseMax'),noRepeatEl=root.querySelector('#noRepeat'),pauseNoRepeatEl=root.querySelector('#pauseNoRepeat'),pulseMinEl=root.querySelector('#pulseMin'),pulseMaxEl=root.querySelector('#pulseMax'),pulseDisplay=root.querySelector('#pulseDisplay'),programNameEl=root.querySelector('#programName'),surpriseEnabledEl=root.querySelector('#surpriseEnabled'),surpriseDelayEl=root.querySelector('#surpriseDelay'),surpriseChanceEl=root.querySelector('#surpriseChance'),surpriseCountEl=root.querySelector('#surpriseCount'),surpriseProgramRandomEl=root.querySelector('#surpriseProgramRandom'),surpriseSessionRandomEl=root.querySelector('#surpriseSessionRandom'),surpriseMinEl=root.querySelector('#surpriseMin'),surpriseMaxEl=root.querySelector('#surpriseMax'),surpriseChoicesEl=root.querySelector('#surpriseChoices');
+    const choiceEl=root.querySelector('#choice'),timeEl=root.querySelector('#time'),barEl=root.querySelector('#bar'),statusEl=root.querySelector('#status');
+    const startBtn=root.querySelector('#start'),stopBtn=root.querySelector('#stop'),skipBtn=root.querySelector('#skip'),pulseBtn=root.querySelector('#pulseBtn'),settingsStart=root.querySelector('#settingsStart'),settingsBack=root.querySelector('#settingsBack');
+    const pageSettings=root.querySelector('#pageSettings'),pageRun=root.querySelector('#pageRun');
+    let timer=null,running=false,lastChoice=null,lastPauseChoice=null,totalMs=0,endAt=0,pulseTimer=null,pulseOn=false,phase='energy',currentProgram=0,surpriseActive=false,surpriseCount=0,sessionElapsedMs=0,surpriseTimer=null;
+    const defaultPrograms=Array.from({length:6},(_,i)=>({name:'ΠΡΟΓΡΑΜΜΑ '+(i+1),choices:'',pauseChoices:'',min:5,max:15,pauseMin:15,pauseMax:30,pulseMin:.1,pulseMax:4,noRepeat:true,pauseNoRepeat:true,surpriseEnabled:false,surpriseDelay:30,surpriseChance:50,surpriseCount:1,surpriseProgramRandom:false,surpriseSessionRandom:false,surpriseMin:5,surpriseMax:15,surpriseChoices:''}));
+    let programs=JSON.parse(localStorage.getItem('randomChoiceTimerPrograms')||'null')||defaultPrograms;
+    function persistPrograms(){localStorage.setItem('randomChoiceTimerPrograms',JSON.stringify(programs))}
+    function saveProgram(){const p=programs[currentProgram];p.name=programNameEl.value.trim()||('ΠΡΟΓΡΑΜΜΑ '+(currentProgram+1));p.choices=choicesEl.value;p.pauseChoices=pauseChoicesEl.value;p.min=minEl.value;p.max=maxEl.value;p.pauseMin=pauseMinEl.value;p.pauseMax=pauseMaxEl.value;p.pulseMin=pulseMinEl.value;p.pulseMax=pulseMaxEl.value;p.noRepeat=noRepeatEl.checked;p.pauseNoRepeat=pauseNoRepeatEl.checked;p.surpriseEnabled=surpriseEnabledEl.checked;p.surpriseDelay=surpriseDelayEl.value;p.surpriseChance=surpriseChanceEl.value;p.surpriseCount=surpriseCountEl.value;p.surpriseProgramRandom=surpriseProgramRandomEl.checked;p.surpriseSessionRandom=surpriseSessionRandomEl.checked;p.surpriseMin=surpriseMinEl.value;p.surpriseMax=surpriseMaxEl.value;p.surpriseChoices=surpriseChoicesEl.value;persistPrograms();const btn=root.querySelector('.program-btn[data-program="'+currentProgram+'"]');if(btn)btn.textContent=p.name}
+    function loadProgram(i){saveProgram();currentProgram=i;const p=programs[i];programNameEl.value=p.name;choicesEl.value=p.choices;pauseChoicesEl.value=p.pauseChoices;minEl.value=p.min;maxEl.value=p.max;pauseMinEl.value=p.pauseMin;pauseMaxEl.value=p.pauseMax;pulseMinEl.value=p.pulseMin;pulseMaxEl.value=p.pulseMax;noRepeatEl.checked=p.noRepeat;pauseNoRepeatEl.checked=p.pauseNoRepeat;surpriseEnabledEl.checked=!!p.surpriseEnabled;surpriseDelayEl.value=p.surpriseDelay??30;surpriseChanceEl.value=p.surpriseChance??50;surpriseCountEl.value=p.surpriseCount??1;surpriseProgramRandomEl.checked=!!p.surpriseProgramRandom;surpriseSessionRandomEl.checked=!!p.surpriseSessionRandom;surpriseMinEl.value=p.surpriseMin??5;surpriseMaxEl.value=p.surpriseMax??15;surpriseChoicesEl.value=p.surpriseChoices??'';pulseDisplay.textContent=Number(p.pulseMin).toFixed(1)+'–'+Number(p.pulseMax).toFixed(1);root.querySelectorAll('.program-btn').forEach(b=>{b.classList.toggle('active',Number(b.dataset.program)===i);b.textContent=programs[Number(b.dataset.program)].name});lastChoice=null;lastPauseChoice=null}
+    function getChoices(){return choicesEl.value.split(/\n|,/).map(x=>x.trim()).filter(Boolean)}
+    function pick(){const a=getChoices();if(!a.length)return null;let pool=a;if(noRepeatEl.checked&&a.length>1&&lastChoice!==null)pool=a.filter(x=>x!==lastChoice);const x=pool[Math.floor(Math.random()*pool.length)];lastChoice=x;return x}
+    function getPauseChoices(){return pauseChoicesEl.value.split(/\n|,/).map(x=>x.trim()).filter(Boolean)}
+    function pickPause(){const a=getPauseChoices();if(!a.length)return 'ΠΑΥΣΗ';let pool=a;if(pauseNoRepeatEl.checked&&a.length>1&&lastPauseChoice!==null)pool=a.filter(x=>x!==lastPauseChoice);const x=pool[Math.floor(Math.random()*pool.length)];lastPauseChoice=x;return x}
+    function getSurpriseChoices(){return surpriseProgramRandomEl.checked?getChoices().concat(getPauseChoices()):surpriseChoicesEl.value.split(/\n|,/).map(x=>x.trim()).filter(Boolean)}
+    function maybeSurprise(){const maxCount=Math.max(1,Math.min(100,Math.floor(Number(surpriseCountEl.value)||1)));if(!running||!surpriseActive||surpriseCount>=maxCount||sessionElapsedMs<Math.max(0,Number(surpriseDelayEl.value)||0)*1000)return false;const chance=Math.max(0,Math.min(100,Number(surpriseChanceEl.value)||0));if(Math.random()*100>=chance)return false;const a=getSurpriseChoices();if(!a.length)return false;surpriseCount++;const lo=Math.max(1,Math.floor(Number(surpriseMinEl.value)||1)),hi=Math.max(lo,Math.floor(Number(surpriseMaxEl.value)||lo)),seconds=Math.floor(Math.random()*(hi-lo+1))+lo;choiceEl.textContent=a[Math.floor(Math.random()*a.length)];totalMs=seconds*1000;endAt=Date.now()+totalMs;stopPulse();pulseBtn.classList.add('pause-on');phase='pause';statusEl.textContent='';root.classList.add('surprise-active');tick();return true}
+    function fmt(ms){let s=Math.max(0,Math.ceil(ms/1000));let m=Math.floor(s/60),sec=s%60;return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0')}
+    function nextRound(){if(!running)return;if(phase==='pause'){root.classList.remove('surprise-active');const a=getChoices();if(!a.length){statusEl.textContent='Βάλε τουλάχιστον μία επιλογή ενέργειας.';stop();return}let lo=Math.max(1,Math.floor(Number(minEl.value)||1)),hi=Math.max(1,Math.floor(Number(maxEl.value)||1));if(lo>hi)[lo,hi]=[hi,lo];const seconds=Math.floor(Math.random()*(hi-lo+1))+lo;let plo=Math.max(.1,Number(pulseMinEl.value)||.1),phi=Math.max(.1,Number(pulseMaxEl.value)||.1);if(plo>phi)[plo,phi]=[phi,plo];const hz=plo+Math.random()*(phi-plo);choiceEl.textContent=pick();totalMs=seconds*1000;endAt=Date.now()+totalMs;startPulse(hz);phase='energy';statusEl.textContent='ΕΝΕΡΓΕΙΑ — μετράει αντίστροφα…';tick();return}let lo=Math.max(0,Math.floor(Number(pauseMinEl.value)||0)),hi=Math.max(0,Math.floor(Number(pauseMaxEl.value)||0));if(lo>hi)[lo,hi]=[hi,lo];const seconds=Math.floor(Math.random()*(hi-lo+1))+lo;choiceEl.textContent=pickPause();totalMs=seconds*1000;endAt=Date.now()+totalMs;stopPulse();pulseBtn.classList.add('pause-on');phase='pause';statusEl.textContent='ΠΑΥΣΗ — μετράει αντίστροφα…';tick()}
+    function tick(){if(!running)return;const left=Math.max(0,endAt-Date.now());sessionElapsedMs+=80;timeEl.textContent=fmt(left);barEl.style.width=totalMs?Math.max(0,Math.min(100,(left/totalMs)*100))+'%':'0%';if(maybeSurprise())return;if(left<=0){nextRound();return}timer=setTimeout(tick,80)}
+    async function enterFullscreen(){try{if(!document.fullscreenElement&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen()}catch(e){}}
+    function start(){if(running)return;saveProgram();running=true;phase='pause';sessionElapsedMs=0;surpriseCount=0;surpriseActive=surpriseEnabledEl.checked&&(surpriseSessionRandomEl.checked?Math.random()<.5:true);switchPage(false);enterFullscreen();nextRound()}
+    function stop(){running=false;if(timer){clearTimeout(timer);timer=null}if(surpriseTimer){clearTimeout(surpriseTimer);surpriseTimer=null}stopPulse();root.classList.remove('surprise-active');statusEl.textContent='Σταμάτησε';barEl.style.width='0%'}
+    function skip(){if(!running)return;if(timer){clearTimeout(timer);timer=null}stopPulse();nextRound()}
+    function pulseInterval(hz){return 1000/(2*Math.max(.1,Math.min(20,hz)))}
+    function pulse(){pulseOn=!pulseOn;pulseBtn.classList.toggle('on',pulseOn)}
+    function startPulse(hz){stopPulse();pulse();pulseTimer=setInterval(pulse,pulseInterval(hz))}
+    function stopPulse(){if(pulseTimer){clearInterval(pulseTimer);pulseTimer=null}pulseOn=false;pulseBtn.classList.remove('on','pause-on')}
+    function switchPage(settings){pageSettings.classList.toggle('active',settings);pageRun.classList.toggle('active',!settings)}
+    function goSettings(){switchPage(true)}
+    pulseMinEl.addEventListener('input',()=>{const a=Math.max(.1,Math.min(20,Number(pulseMinEl.value)||.1)),b=Math.max(.1,Math.min(20,Number(pulseMaxEl.value)||.1));pulseDisplay.textContent=Math.min(a,b).toFixed(1)+'–'+Math.max(a,b).toFixed(1)});
+    pulseMaxEl.addEventListener('input',()=>{const a=Math.max(.1,Math.min(20,Number(pulseMinEl.value)||.1)),b=Math.max(.1,Math.min(20,Number(pulseMaxEl.value)||.1));pulseDisplay.textContent=Math.min(a,b).toFixed(1)+'–'+Math.max(a,b).toFixed(1)});
+    startBtn.addEventListener('click',start);settingsStart.addEventListener('click',start);stopBtn.addEventListener('click',stop);skipBtn.addEventListener('click',skip);
+    settingsBack.addEventListener('click',goSettings);
+    root.querySelectorAll('.program-btn').forEach(b=>b.addEventListener('click',()=>loadProgram(Number(b.dataset.program))));
+    loadProgram(0);
+    root.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('change',saveProgram));
+  })();
+  </script>
+</div>
