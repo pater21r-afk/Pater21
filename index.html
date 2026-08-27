@@ -1,4 +1,5 @@
-<link rel="manifest" href="./manifest.json">
+﻿<meta charset="UTF-8">
+  <link rel="manifest" href="./manifest.json">
 <div id="rt-app">
   <style>
     #rt-app{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100%;box-sizing:border-box;padding:18px;background:light-dark(#f5f5f7,#111113);color:light-dark(#151515,#f5f5f5)}
@@ -19,6 +20,13 @@
     .rt-pulse-btn{width:130px;height:130px;border-radius:50%;background:#fff;border:6px solid #e6e6e6;transition:transform .16s ease,background .22s ease,box-shadow .22s ease}
     .rt-pulse-btn.on{background:#39ff14;border-color:#8aff70;box-shadow:0 0 18px rgba(57,255,20,.45),0 0 45px rgba(57,255,20,.8);transform:scale(1.08)}
     .rt-pulse-btn.pause-on{background:#ff2020;border-color:#ff7070;box-shadow:0 0 45px rgba(255,32,32,.95);transform:scale(1.06)}
+    @keyframes rtLampBlink {
+      0%,100% { background:#39ff14; border-color:#8aff70; transform:scale(1.08); box-shadow:0 0 18px rgba(57,255,20,.45),0 0 45px rgba(57,255,20,.8); }
+      50% { background:#fff; border-color:#e6e6e6; transform:scale(1); box-shadow:none; }
+    }
+    .rt-pulse-btn.on{animation:none}
+    .rt-pulse-btn.pause-on{animation:none}
+
     #rt-app.surprise-active{background:radial-gradient(circle at 50% 42%,#fff8c7 0%,#ffd84a 38%,#d49b00 72%,#8a5a00 100%);color:#3d2600}
     #rt-app.surprise-active .rt-card{background:linear-gradient(145deg,#fff3a3,#f5c542,#c99100);border-color:#ffe47a;box-shadow:0 0 35px rgba(255,215,60,.85),inset 0 0 25px rgba(255,248,190,.7);color:#3d2600}
     #rt-app.surprise-active .rt-choice{text-shadow:0 0 12px rgba(255,255,220,.95),0 2px 3px rgba(80,45,0,.35)}
@@ -28,8 +36,10 @@
     .rt-time{display:none;font-size:clamp(48px,15vw,86px);font-weight:900;line-height:1;margin:14px 0 18px;font-variant-numeric:tabular-nums}
     .rt-track{height:18px;border-radius:99px;background:light-dark(#e2e2e5,#37373c);overflow:hidden;margin:0 4px}
     .rt-bar{height:100%;width:0%;background:#e53935;border-radius:99px;transition:width .1s linear}
-    .rt-status{text-align:center;font-size:14px;min-height:20px;margin-top:10px;color:light-dark(#666,#aaa)}
-    #pageRun .rt-status{display:none}
+    .rt-energy-controls{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-left:auto}.rt-energy-controls input{width:72px;padding:6px 5px;font-size:12px}.rt-energy-controls span{font-size:11px;opacity:.7}.rt-choice-row{display:flex;align-items:center;gap:8px}
+.rt-energy-controls{display:flex;gap:5px;align-items:center;flex-wrap:wrap}.rt-energy-controls input{width:70px}.rt-status{text-align:center;font-size:14px;min-height:20px;margin-top:10px;color:light-dark(#666,#aaa)}
+    #pageRun .rt-energy-controls{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-left:auto}.rt-energy-controls input{width:72px;padding:6px 5px;font-size:12px}.rt-energy-controls span{font-size:11px;opacity:.7}.rt-choice-row{display:flex;align-items:center;gap:8px}
+.rt-status{display:none}
     .rt-buttons{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px}
     .skip{background:light-dark(#e8e8eb,#36363b);color:inherit}
     button{min-height:52px;border:0;border-radius:14px;font:inherit;font-weight:800;font-size:17px;cursor:pointer;padding:10px 14px}
@@ -42,8 +52,22 @@
     .program-btn{background:light-dark(#e8e8eb,#36363b);color:inherit;min-height:44px;font-size:14px;padding:7px 8px}
     .program-btn.active{background:#e53935;color:#fff}
     .program-name{margin-bottom:8px}
+    .rate-list{margin-top:10px}
+    .rate-row{display:grid;grid-template-columns:minmax(0,1fr) 1fr 1fr;gap:7px;align-items:center;margin-top:7px}
+    .rate-name{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .rate-row input{padding:9px}
     @media(max-width:420px){#rt-app{padding:12px}.rt-card{padding:14px}.rt-grid{gap:8px}.rt-buttons{gap:8px}}
-  </style>
+  .rt-choice-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.rt-energy-name{width:110px}.rt-mini{width:62px;padding:5px 4px}.rt-unit{font-size:11px;opacity:.75}
+
+.energy-editor{display:flex;flex-direction:column;gap:7px;margin-top:8px}
+.energy-row{display:grid;grid-template-columns:minmax(105px,1fr) auto;gap:6px;align-items:center}
+.energy-name-input{min-width:0}
+.energy-controls-inline{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.energy-controls-inline input{width:58px;padding:6px 4px}
+.energy-controls-inline .rt-unit{font-size:10px;opacity:.75}
+.rt-secondary{margin-top:8px;padding:8px 12px;border:0;border-radius:9px;background:#eee;font-weight:600}
+@media(max-width:700px){.energy-row{grid-template-columns:1fr}.energy-controls-inline{padding-left:0}}
+</style>
   <div class="rt-wrap">
     <div class="rt-title">Random Choice Timer</div>
     <div class="rt-tabs"></div>
@@ -61,19 +85,25 @@
       <input class="program-name" id="programName" type="text" maxlength="30" placeholder="Π.χ. Πρόγραμμα προπόνησης">
     </div>
     <div class="rt-card">
-      <label class="rt-label" for="choices">Επιλογές — μία σε κάθε γραμμή</label>
-      <textarea id="choices" placeholder="Π.χ.\nΑ\nΒ\nΓ\nΔ"></textarea>
-      <label class="rt-options"><input id="noRepeat" type="checkbox" checked> Να μην εμφανίζεται η ίδια επιλογή δύο φορές συνεχόμενα</label>
+      <label class="rt-label" for="choices">Ενέργειες — μία σε κάθε γραμμή</label>
+      <textarea id="choices" style="display:none" aria-hidden="true"></textarea>
+      <div id="energyEditor" class="energy-editor"></div>
+      <button type="button" id="addEnergyBtn" class="rt-secondary">＋ Προσθήκη ενέργειας</button>
+      <label class="rt-options"><input id="noRepeat" type="checkbox" checked> Να μην εμφανίζεται η ίδια επιλογή δύο φορές συνεχόμενα</label>      <div class="rt-status" style="margin-top:10px">Κάθε νέα ενέργεια παίρνει αυτόματα τυχαίο χρόνο από το γενικό εύρος, εκτός αν έχεις ορίσει δικό της εύρος.</div>
+      <div class="rt-status" style="text-align:left;margin-top:12px">Χρόνος κάθε ενέργειας: κενό = χρησιμοποιεί το γενικό MIN–MAX. Συμπλήρωσε δικό σου MIN–MAX μόνο όταν θέλεις εξαίρεση. Ρυθμός κάθε ενέργειας: βάλε ίδιο MIN–MAX για σταθερό ρυθμό ή διαφορετικά MIN–MAX για αυτόματες τυχαίες αλλαγές κατά την εκτέλεση.</div>
+      <div id="choiceRates" class="rate-list"></div>
     </div>
     <div class="rt-card">
-      <label class="rt-label" for="pauseChoices">Επιλογές κατά την παύση — μία σε κάθε γραμμή</label>
+      <label class="rt-label" for="pauseChoices">Παύσεις — μία σε κάθε γραμμή</label>
       <textarea id="pauseChoices" placeholder="Π.χ.\nΠΑΥΣΗ 1\nΠΑΥΣΗ 2\nΠΑΥΣΗ 3"></textarea>
       <label class="rt-options"><input id="pauseNoRepeat" type="checkbox" checked> Να μην εμφανίζεται η ίδια επιλογή δύο φορές συνεχόμενα</label>
+      <div class="rt-status" style="text-align:left;margin-top:12px">Ρυθμός κάθε παύσης: βάλε ίδιο MIN–MAX για σταθερό ρυθμό ή διαφορετικά MIN–MAX για αλλαγές.</div>
+      <div id="pauseRates" class="rate-list"></div>
     </div>
     <div class="rt-card">
       <div class="rt-grid">
-        <div><label class="rt-label" for="min">Ενέργεια — ελάχιστα sec</label><input id="min" type="number" min="1" max="86400" value="5"></div>
-        <div><label class="rt-label" for="max">Ενέργεια — μέγιστα sec</label><input id="max" type="number" min="1" max="86400" value="15"></div>
+        <div><label class="rt-label" for="min">Ενέργεια — ελάχιστα sec</label><input id="min" type="number" min="1" max="86400" value="30"></div>
+        <div><label class="rt-label" for="max">Ενέργεια — μέγιστα sec</label><input id="max" type="number" min="1" max="86400" value="60"></div>
       </div>
       <div class="rt-grid" style="margin-top:12px">
         <div><label class="rt-label" for="pauseMin">Παύση — ελάχιστα sec</label><input id="pauseMin" type="number" min="0" max="86400" value="15"></div>
@@ -81,12 +111,25 @@
       </div>
     </div>
     <div class="rt-card">
+      <label class="rt-label">Παραμονή στον ίδιο ρυθμό πριν την επόμενη τυχαία αλλαγή — sec</label>
       <div class="rt-grid">
-        <div><label class="rt-label" for="pulseMin">Παλμοί/sec — ελάχιστο</label><input id="pulseMin" type="number" min="0.1" max="20" step="0.1" value="0.1"></div>
-        <div><label class="rt-label" for="pulseMax">Παλμοί/sec — μέγιστο</label><input id="pulseMax" type="number" min="0.1" max="4" step="0.1" value="4"></div>
+        <div><label class="rt-label" for="rateHoldMin">MIN sec</label><input id="rateHoldMin" type="number" min="0" max="86400" step="1" value="10"></div>
+        <div><label class="rt-label" for="rateHoldMax">MAX sec</label><input id="rateHoldMax" type="number" min="0" max="86400" step="1" value="10"></div>
       </div>
-      <div class="rt-pulse-value"><span id="pulseDisplay">0.1–4.0</span> Hz</div>
-      <div class="rt-status">Σε κάθε νέα ενέργεια επιλέγεται τυχαία ρυθμός μέσα στο εύρος.</div>
+      <div class="rt-status" style="display:block">Προεπιλογή 10–10 sec. Το εύρος αφορά μόνο τον χρόνο παραμονής στον νέο ρυθμό.</div>
+    </div>
+    <div class="rt-card">
+      <label class="rt-label">Γενικό εύρος παλμών/sec για όλες τις ΕΝΕΡΓΕΙΕΣ</label>
+      <div class="rt-grid">
+        <div><label class="rt-label" for="globalPulseMin">MIN</label><input id="globalPulseMin" type="number" min="0.1" max="20" step="0.1" value="0.5"></div>
+        <div><label class="rt-label" for="globalPulseMax">MAX</label><input id="globalPulseMax" type="number" min="0.1" max="20" step="0.1" value="2"></div>
+      </div>
+      <div class="rt-status" style="display:block">Ισχύει για όλες τις ενέργειες. Αν ορίσεις διαφορετικό εύρος δίπλα σε συγκεκριμένη ενέργεια, υπερισχύει μόνο εκεί.</div>
+    </div>
+<div class="rt-card">
+      <label class="rt-label" for="sessionTotal">Συνολικός χρόνος συνεδρίας — λεπτά</label>
+      <input id="sessionTotal" type="number" min="1" max="1440" value="30">
+      <div class="rt-status">Η συνεδρία σταματά αυτόματα όταν συμπληρωθεί ο συνολικός χρόνος.</div>
     </div>
     <div class="rt-card">
       <label class="rt-options"><input id="surpriseEnabled" type="checkbox"> Τυχαία έκπληξη κατά την προπόνηση</label>
@@ -116,7 +159,7 @@
       <div class="rt-pulse"><button class="rt-pulse-btn" id="pulseBtn" type="button" aria-label="Παλμός"></button></div>
       <div class="rt-status" id="status">Έτοιμο</div>
       <div class="rt-buttons">
-        <button class="start" id="start" type="button">START</button>
+        <button class="start" id="start" type="button">PAUSE</button>
         <button class="stop" id="stop" type="button">STOP</button>
         <button class="skip" id="skip" type="button">SKIP</button>
       </div>
@@ -126,43 +169,294 @@
   </div>
   <script>
   (function(){
-    const root=document.getElementById('rt-app');
-    const choicesEl=root.querySelector('#choices'),pauseChoicesEl=root.querySelector('#pauseChoices'),minEl=root.querySelector('#min'),maxEl=root.querySelector('#max'),pauseMinEl=root.querySelector('#pauseMin'),pauseMaxEl=root.querySelector('#pauseMax'),noRepeatEl=root.querySelector('#noRepeat'),pauseNoRepeatEl=root.querySelector('#pauseNoRepeat'),pulseMinEl=root.querySelector('#pulseMin'),pulseMaxEl=root.querySelector('#pulseMax'),pulseDisplay=root.querySelector('#pulseDisplay'),programNameEl=root.querySelector('#programName'),surpriseEnabledEl=root.querySelector('#surpriseEnabled'),surpriseDelayEl=root.querySelector('#surpriseDelay'),surpriseChanceEl=root.querySelector('#surpriseChance'),surpriseCountEl=root.querySelector('#surpriseCount'),surpriseProgramRandomEl=root.querySelector('#surpriseProgramRandom'),surpriseSessionRandomEl=root.querySelector('#surpriseSessionRandom'),surpriseMinEl=root.querySelector('#surpriseMin'),surpriseMaxEl=root.querySelector('#surpriseMax'),surpriseChoicesEl=root.querySelector('#surpriseChoices');
+    const root=document.getElementById('rt-app'); const energyEditorEl=root.querySelector('#energyEditor'),addEnergyBtn=root.querySelector('#addEnergyBtn');
+    const choicesEl=root.querySelector('#choices'),pauseChoicesEl=root.querySelector('#pauseChoices'),choiceRatesEl=root.querySelector('#choiceRates'),pauseRatesEl=root.querySelector('#pauseRates'),minEl=root.querySelector('#min'),maxEl=root.querySelector('#max'),pauseMinEl=root.querySelector('#pauseMin'),pauseMaxEl=root.querySelector('#pauseMax'),sessionTotalEl=root.querySelector('#sessionTotal'),rateHoldMinEl=root.querySelector('#rateHoldMin'),rateHoldMaxEl=root.querySelector('#rateHoldMax'),noRepeatEl=root.querySelector('#noRepeat'),pauseNoRepeatEl=root.querySelector('#pauseNoRepeat'),programNameEl=root.querySelector('#programName'),surpriseEnabledEl=root.querySelector('#surpriseEnabled'),surpriseDelayEl=root.querySelector('#surpriseDelay'),surpriseChanceEl=root.querySelector('#surpriseChance'),surpriseCountEl=root.querySelector('#surpriseCount'),surpriseProgramRandomEl=root.querySelector('#surpriseProgramRandom'),surpriseSessionRandomEl=root.querySelector('#surpriseSessionRandom'),surpriseMinEl=root.querySelector('#surpriseMin'),surpriseMaxEl=root.querySelector('#surpriseMax'),surpriseChoicesEl=root.querySelector('#surpriseChoices');
     const choiceEl=root.querySelector('#choice'),timeEl=root.querySelector('#time'),barEl=root.querySelector('#bar'),statusEl=root.querySelector('#status');
     const startBtn=root.querySelector('#start'),stopBtn=root.querySelector('#stop'),skipBtn=root.querySelector('#skip'),pulseBtn=root.querySelector('#pulseBtn'),settingsStart=root.querySelector('#settingsStart'),settingsBack=root.querySelector('#settingsBack');
     const pageSettings=root.querySelector('#pageSettings'),pageRun=root.querySelector('#pageRun');
-    let timer=null,running=false,lastChoice=null,lastPauseChoice=null,totalMs=0,endAt=0,pulseTimer=null,pulseOn=false,phase='energy',currentProgram=0,surpriseActive=false,surpriseCount=0,sessionElapsedMs=0,surpriseTimer=null;
-    const defaultPrograms=Array.from({length:6},(_,i)=>({name:'ΠΡΟΓΡΑΜΜΑ '+(i+1),choices:'',pauseChoices:'',min:5,max:15,pauseMin:15,pauseMax:30,pulseMin:.1,pulseMax:4,noRepeat:true,pauseNoRepeat:true,surpriseEnabled:false,surpriseDelay:30,surpriseChance:50,surpriseCount:1,surpriseProgramRandom:false,surpriseSessionRandom:false,surpriseMin:5,surpriseMax:15,surpriseChoices:''}));
-    let programs=JSON.parse(localStorage.getItem('randomChoiceTimerPrograms')||'null')||defaultPrograms;
+    let timer=null,running=false,paused=false,lastChoice=null,lastPauseChoice=null,totalMs=0,endAt=0,pulseTimer=null,pulseOn=false,phase='energy',currentProgram=0,surpriseActive=false,surpriseCount=0,sessionElapsedMs=0,sessionStartAt=0,surpriseTimer=null;
+    const programNames=['ΠΡΟΓΡΑΜΜΑ 1','ΠΡΟΓΡΑΜΜΑ 2','ΠΡΟΓΡΑΜΜΑ 3','ΠΡΟΓΡΑΜΜΑ 4','ΠΡΟΓΡΑΜΜΑ 5','ΠΡΟΓΡΑΜΜΑ 6'];
+    const defaultPrograms=Array.from({length:6},(_,i)=>({name:programNames[i],choices:'',pauseChoices:'',min:30,max:60,pauseMin:15,pauseMax:30,sessionTotal:30,rateHoldMin:10,rateHoldMax:10,choiceRates:{},pauseRates:{},noRepeat:true,pauseNoRepeat:true,surpriseEnabled:false,surpriseDelay:30,surpriseChance:50,surpriseCount:1,surpriseProgramRandom:false,surpriseSessionRandom:false,surpriseMin:5,surpriseMax:15,surpriseChoices:'',energyOverrides:{}}));
+    let programs=JSON.parse(localStorage.getItem('randomChoiceTimerPrograms')||'null')||defaultPrograms;programs.forEach(p=>{if(!p.energyOverrides)p.energyOverrides={}});
+    programs=Array.from({length:6},(_,i)=>({...defaultPrograms[i],...(programs[i]||{}),name:programNames[i]}));
+    programs.forEach(p=>{if(Number(p.min)===5&&Number(p.max)===15){p.min=30;p.max=60}if(p.rateHoldMin==null)p.rateHoldMin=10;if(p.rateHoldMax==null)p.rateHoldMax=10;if(!p.energyOverrides)p.energyOverrides={}});
     function persistPrograms(){localStorage.setItem('randomChoiceTimerPrograms',JSON.stringify(programs))}
-    function saveProgram(){const p=programs[currentProgram];p.name=programNameEl.value.trim()||('ΠΡΟΓΡΑΜΜΑ '+(currentProgram+1));p.choices=choicesEl.value;p.pauseChoices=pauseChoicesEl.value;p.min=minEl.value;p.max=maxEl.value;p.pauseMin=pauseMinEl.value;p.pauseMax=pauseMaxEl.value;p.pulseMin=pulseMinEl.value;p.pulseMax=pulseMaxEl.value;p.noRepeat=noRepeatEl.checked;p.pauseNoRepeat=pauseNoRepeatEl.checked;p.surpriseEnabled=surpriseEnabledEl.checked;p.surpriseDelay=surpriseDelayEl.value;p.surpriseChance=surpriseChanceEl.value;p.surpriseCount=surpriseCountEl.value;p.surpriseProgramRandom=surpriseProgramRandomEl.checked;p.surpriseSessionRandom=surpriseSessionRandomEl.checked;p.surpriseMin=surpriseMinEl.value;p.surpriseMax=surpriseMaxEl.value;p.surpriseChoices=surpriseChoicesEl.value;persistPrograms();const btn=root.querySelector('.program-btn[data-program="'+currentProgram+'"]');if(btn)btn.textContent=p.name}
-    function loadProgram(i){saveProgram();currentProgram=i;const p=programs[i];programNameEl.value=p.name;choicesEl.value=p.choices;pauseChoicesEl.value=p.pauseChoices;minEl.value=p.min;maxEl.value=p.max;pauseMinEl.value=p.pauseMin;pauseMaxEl.value=p.pauseMax;pulseMinEl.value=p.pulseMin;pulseMaxEl.value=p.pulseMax;noRepeatEl.checked=p.noRepeat;pauseNoRepeatEl.checked=p.pauseNoRepeat;surpriseEnabledEl.checked=!!p.surpriseEnabled;surpriseDelayEl.value=p.surpriseDelay??30;surpriseChanceEl.value=p.surpriseChance??50;surpriseCountEl.value=p.surpriseCount??1;surpriseProgramRandomEl.checked=!!p.surpriseProgramRandom;surpriseSessionRandomEl.checked=!!p.surpriseSessionRandom;surpriseMinEl.value=p.surpriseMin??5;surpriseMaxEl.value=p.surpriseMax??15;surpriseChoicesEl.value=p.surpriseChoices??'';pulseDisplay.textContent=Number(p.pulseMin).toFixed(1)+'–'+Number(p.pulseMax).toFixed(1);root.querySelectorAll('.program-btn').forEach(b=>{b.classList.toggle('active',Number(b.dataset.program)===i);b.textContent=programs[Number(b.dataset.program)].name});lastChoice=null;lastPauseChoice=null}
+    function getLines(el){return el.value.split(/\n|,/).map(x=>x.trim()).filter(Boolean)}
+    function renderRateEditors(){
+  const p=programs[currentProgram];
+  p.choiceRates=p.choiceRates||{};
+  p.globalPulseMin=p.globalPulseMin??0.5; p.globalPulseMax=p.globalPulseMax??2;
+  p.pauseRates=p.pauseRates||{};
+  p.energyOverrides=p.energyOverrides||{};
+  p.energyWeights=p.energyWeights||{};
+  // Migration from the previous version: old untouched default was 10.
+  // Change only exact old-default entries to 100; custom weights stay intact.
+  Object.keys(p.energyWeights).forEach(k=>{
+    if(Number(p.energyWeights[k])===10) p.energyWeights[k]=100;
+  });
+
+  const names=getLines(choicesEl);
+  names.forEach(n=>{if(p.energyWeights[n]==null)p.energyWeights[n]=100;});
+
+  energyEditorEl.innerHTML='';
+  names.forEach((name,i)=>{
+    const r=p.choiceRates[name]||{min:p.globalPulseMin,max:p.globalPulseMax};
+    const o=p.energyOverrides[name]||{};
+    const w=p.energyWeights[name]??100;
+    const row=document.createElement('div');
+    row.className='energy-row';
+    row.innerHTML=
+      '<input class="energy-name-input" type="text" value="'+name.replace(/"/g,'&quot;')+'" data-energy-name="'+i+'">'+
+      '<div class="energy-controls-inline">'+
+      '<span class="rt-unit">sec</span>'+
+      '<input type="number" min="1" max="86400" placeholder="'+Number(minEl.value||30)+'" data-energy-time-min="'+i+'" value="'+(o.min??'')+'">'+
+      '<span class="rt-unit">–</span>'+
+      '<input type="number" min="1" max="86400" placeholder="'+Number(maxEl.value||60)+'" data-energy-time-max="'+i+'" value="'+(o.max??'')+'">'+
+      '<span class="rt-unit">παλμοί/sec</span>'+
+      '<input type="number" min="0.1" max="20" step="0.1" placeholder="γενικό" data-rate-kind="choice" data-rate-index="'+i+'" data-rate-field="min" value="'+Number(r.min??p.globalPulseMin).toFixed(1)+'">'+
+      '<span class="rt-unit">–</span>'+
+      '<input type="number" min="0.1" max="20" step="0.1" placeholder="γενικό" data-rate-kind="choice" data-rate-index="'+i+'" data-rate-field="max" value="'+Number(r.max??p.globalPulseMax).toFixed(1)+'">'+
+      '<span class="rt-unit">βάρος</span>'+
+      '<input type="number" min="0" step="1" data-energy-weight="'+i+'" value="'+w+'">'+
+      '</div>';
+    energyEditorEl.appendChild(row);
+  });
+
+  // Keep pause rate controls below the pause list as before.
+  pauseRatesEl.innerHTML='';
+  getLines(pauseChoicesEl).forEach((name,i)=>{
+    const r=p.pauseRates[name]||{min:1,max:1};
+    const row=document.createElement('div'); row.className='rt-choice-row';
+    row.innerHTML='<span class="rate-name">'+name+'</span>'+
+      '<span class="rt-unit">παλμοί/sec</span>'+
+      '<input class="rt-mini" type="number" min="0.1" max="20" step="0.1" data-rate-kind="pause" data-rate-index="'+i+'" data-rate-field="min" value="'+Number(r.min||1).toFixed(1)+'">'+
+      '<span class="rt-unit">–</span>'+
+      '<input class="rt-mini" type="number" min="0.1" max="20" step="0.1" data-rate-kind="pause" data-rate-index="'+i+'" data-rate-field="max" value="'+Number(r.max||1).toFixed(1)+'">';
+    pauseRatesEl.appendChild(row);
+  });
+}
+function readRateEditors(){
+  const p=programs[currentProgram];
+  p.choiceRates=p.choiceRates||{}; p.pauseRates=p.pauseRates||{};
+  p.energyOverrides=p.energyOverrides||{}; p.energyWeights=p.energyWeights||{};
+
+  root.querySelectorAll('[data-energy-time-min],[data-energy-time-max]').forEach(el=>{
+    const i=Number(el.dataset.energyTimeMin??el.dataset.energyTimeMax);
+    const name=getLines(choicesEl)[i]; if(!name)return;
+    p.energyOverrides[name]=p.energyOverrides[name]||{};
+    const key=el.dataset.energyTimeMin!==undefined?'min':'max';
+    if(el.value.trim()==='') delete p.energyOverrides[name][key];
+    else p.energyOverrides[name][key]=Math.max(1,Number(el.value)||1);
+  });
+
+  root.querySelectorAll('[data-energy-weight]').forEach(el=>{
+    const i=Number(el.dataset.energyWeight), name=getLines(choicesEl)[i];
+    if(!name)return;
+    p.energyWeights[name]=Math.max(0,Number(el.value)||0);
+  });
+
+  root.querySelectorAll('[data-rate-kind]').forEach(el=>{
+    const names=el.dataset.rateKind==='choice'?getLines(choicesEl):getLines(pauseChoicesEl);
+    const name=names[Number(el.dataset.rateIndex)]; if(!name)return;
+    const rates=el.dataset.rateKind==='choice'?p.choiceRates:p.pauseRates;
+    rates[name]=rates[name]||{min:1,max:1};
+    rates[name][el.dataset.rateField]=Math.max(.1,Math.min(20,Number(el.value)||1));
+  });
+}
+
+function weightedEnergyChoice(){
+  const names=getLines(choicesEl);
+  if(!names.length)return '';
+  const p=programs[currentProgram], weights=p.energyWeights||{};
+  let total=0;
+  names.forEach(n=>{ total+=Math.max(0,Number(weights[n]??100)); });
+  if(total<=0)return names[Math.floor(Math.random()*names.length)];
+  let x=Math.random()*total;
+  for(const n of names){ x-=Math.max(0,Number(weights[n]??100)); if(x<0)return n; }
+  return names[names.length-1];
+}
+
+function randomDifferentRate(min,max,current){
+  min=Number(min); max=Number(max); current=Number(current);
+  if(!Number.isFinite(min)||!Number.isFinite(max)) return current;
+  if(max<min){const t=min;min=max;max=t;}
+  if(max-min<0.7) return current;
+  const candidates=[];
+  // Generate candidates on 0.1 pulse/sec steps within the configured range.
+  const lo=Math.ceil(min*10-1e-9), hi=Math.floor(max*10+1e-9);
+  for(let n=lo;n<=hi;n++){
+    const v=n/10;
+    if(Math.abs(v-current)>=0.7-1e-9) candidates.push(v);
+  }
+  if(!candidates.length) return current;
+  return candidates[Math.floor(Math.random()*candidates.length)];
+}
+
+function rateFor(name,isPause){
+      const p=programs[currentProgram];
+      const r=(isPause?p.pauseRates:p.choiceRates)?.[name]||{min:1,max:1};
+      let min=Math.max(.1,Math.min(20,Number(r.min)||1));
+      let max=Math.max(.1,Math.min(20,Number(r.max)||min));
+      if(min>max)[min,max]=[max,min];
+      return {min,max};
+    }
+    function randomRate(r){return r.min===r.max?r.min:r.min+Math.random()*(r.max-r.min)}
+    function saveProgram(){readRateEditors();const p=programs[currentProgram];p.name=programNameEl.value.trim()||('ΠΡΟΓΡΑΜΜΑ '+(currentProgram+1));p.choices=choicesEl.value;p.pauseChoices=pauseChoicesEl.value;p.min=minEl.value;p.max=maxEl.value;p.pauseMin=pauseMinEl.value;p.pauseMax=pauseMaxEl.value;p.sessionTotal=sessionTotalEl.value;p.rateHoldMin=rateHoldMinEl.value;p.rateHoldMax=rateHoldMaxEl.value;p.noRepeat=noRepeatEl.checked;p.pauseNoRepeat=pauseNoRepeatEl.checked;p.surpriseEnabled=surpriseEnabledEl.checked;p.surpriseDelay=surpriseDelayEl.value;p.surpriseChance=surpriseChanceEl.value;p.surpriseCount=surpriseCountEl.value;p.surpriseProgramRandom=surpriseProgramRandomEl.checked;p.surpriseSessionRandom=surpriseSessionRandomEl.checked;p.surpriseMin=surpriseMinEl.value;p.surpriseMax=surpriseMaxEl.value;p.surpriseChoices=surpriseChoicesEl.value;persistPrograms();const btn=root.querySelector('.program-btn[data-program="'+currentProgram+'"]');if(btn)btn.textContent=p.name}
+    function loadProgram(i){saveProgram();currentProgram=i;const p=programs[i];
+      if(i===0 && !p.choices)p.choices='ΕΝΕΡΓΕΙΑ 1';
+      if(i===0 && !p.pauseChoices)p.pauseChoices='ΠΑΥΣΗ 2';
+      if(i===0 && !p.surpriseChoices)p.surpriseChoices='ΕΚΠΛΗΞΗ 3';programNameEl.value=p.name;choicesEl.value=p.choices;pauseChoicesEl.value=p.pauseChoices;minEl.value=p.min;maxEl.value=p.max;pauseMinEl.value=p.pauseMin;pauseMaxEl.value=p.pauseMax;sessionTotalEl.value=p.sessionTotal??30;rateHoldMinEl.value=p.rateHoldMin??10;rateHoldMaxEl.value=p.rateHoldMax??10;noRepeatEl.checked=p.noRepeat;pauseNoRepeatEl.checked=p.pauseNoRepeat;surpriseEnabledEl.checked=!!p.surpriseEnabled;surpriseDelayEl.value=p.surpriseDelay??30;surpriseChanceEl.value=p.surpriseChance??50;surpriseCountEl.value=p.surpriseCount??1;surpriseProgramRandomEl.checked=!!p.surpriseProgramRandom;surpriseSessionRandomEl.checked=!!p.surpriseSessionRandom;surpriseMinEl.value=p.surpriseMin??5;surpriseMaxEl.value=p.surpriseMax??15;surpriseChoicesEl.value=p.surpriseChoices??'';root.querySelectorAll('.program-btn').forEach(b=>{b.classList.toggle('active',Number(b.dataset.program)===i);b.textContent=programs[Number(b.dataset.program)].name});renderRateEditors();lastChoice=null;lastPauseChoice=null}
     function getChoices(){return choicesEl.value.split(/\n|,/).map(x=>x.trim()).filter(Boolean)}
     function pick(){const a=getChoices();if(!a.length)return null;let pool=a;if(noRepeatEl.checked&&a.length>1&&lastChoice!==null)pool=a.filter(x=>x!==lastChoice);const x=pool[Math.floor(Math.random()*pool.length)];lastChoice=x;return x}
+    function getEnergyRange(choice){
+      const o=programs[currentProgram].energyOverrides||{};
+      const v=o[choice];
+      if(v && Number(v.min)>0 && Number(v.max)>0) return {min:Number(v.min),max:Number(v.max)};
+      return {min:Math.max(1,Math.floor(Number(minEl.value)||30)),max:Math.max(1,Math.floor(Number(maxEl.value)||60))};
+    }
     function getPauseChoices(){return pauseChoicesEl.value.split(/\n|,/).map(x=>x.trim()).filter(Boolean)}
     function pickPause(){const a=getPauseChoices();if(!a.length)return 'ΠΑΥΣΗ';let pool=a;if(pauseNoRepeatEl.checked&&a.length>1&&lastPauseChoice!==null)pool=a.filter(x=>x!==lastPauseChoice);const x=pool[Math.floor(Math.random()*pool.length)];lastPauseChoice=x;return x}
     function getSurpriseChoices(){return surpriseProgramRandomEl.checked?getChoices().concat(getPauseChoices()):surpriseChoicesEl.value.split(/\n|,/).map(x=>x.trim()).filter(Boolean)}
     function maybeSurprise(){const maxCount=Math.max(1,Math.min(100,Math.floor(Number(surpriseCountEl.value)||1)));if(!running||!surpriseActive||surpriseCount>=maxCount||sessionElapsedMs<Math.max(0,Number(surpriseDelayEl.value)||0)*1000)return false;const chance=Math.max(0,Math.min(100,Number(surpriseChanceEl.value)||0));if(Math.random()*100>=chance)return false;const a=getSurpriseChoices();if(!a.length)return false;surpriseCount++;const lo=Math.max(1,Math.floor(Number(surpriseMinEl.value)||1)),hi=Math.max(lo,Math.floor(Number(surpriseMaxEl.value)||lo)),seconds=Math.floor(Math.random()*(hi-lo+1))+lo;choiceEl.textContent=a[Math.floor(Math.random()*a.length)];totalMs=seconds*1000;endAt=Date.now()+totalMs;stopPulse();pulseBtn.classList.add('pause-on');phase='pause';statusEl.textContent='';root.classList.add('surprise-active');tick();return true}
     function fmt(ms){let s=Math.max(0,Math.ceil(ms/1000));let m=Math.floor(s/60),sec=s%60;return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0')}
-    function nextRound(){if(!running)return;if(phase==='pause'){root.classList.remove('surprise-active');const a=getChoices();if(!a.length){statusEl.textContent='Βάλε τουλάχιστον μία επιλογή ενέργειας.';stop();return}let lo=Math.max(1,Math.floor(Number(minEl.value)||1)),hi=Math.max(1,Math.floor(Number(maxEl.value)||1));if(lo>hi)[lo,hi]=[hi,lo];const seconds=Math.floor(Math.random()*(hi-lo+1))+lo;let plo=Math.max(.1,Number(pulseMinEl.value)||.1),phi=Math.max(.1,Number(pulseMaxEl.value)||.1);if(plo>phi)[plo,phi]=[phi,plo];const hz=plo+Math.random()*(phi-plo);choiceEl.textContent=pick();totalMs=seconds*1000;endAt=Date.now()+totalMs;startPulse(hz);phase='energy';statusEl.textContent='ΕΝΕΡΓΕΙΑ — μετράει αντίστροφα…';tick();return}let lo=Math.max(0,Math.floor(Number(pauseMinEl.value)||0)),hi=Math.max(0,Math.floor(Number(pauseMaxEl.value)||0));if(lo>hi)[lo,hi]=[hi,lo];const seconds=Math.floor(Math.random()*(hi-lo+1))+lo;choiceEl.textContent=pickPause();totalMs=seconds*1000;endAt=Date.now()+totalMs;stopPulse();pulseBtn.classList.add('pause-on');phase='pause';statusEl.textContent='ΠΑΥΣΗ — μετράει αντίστροφα…';tick()}
-    function tick(){if(!running)return;const left=Math.max(0,endAt-Date.now());sessionElapsedMs+=80;timeEl.textContent=fmt(left);barEl.style.width=totalMs?Math.max(0,Math.min(100,(left/totalMs)*100))+'%':'0%';if(maybeSurprise())return;if(left<=0){nextRound();return}timer=setTimeout(tick,80)}
+    let dynamicPulseTimer=null;
+    let dynamicRate=0;
+    let rateChangeTimer=null;
+    let rateHoldTimer=null;
+    function smoothDynamicRate(){
+      if(!running || paused || phase!=='energy') return;
+      const r=rateFor(choiceEl.textContent,false);
+      const target=randomRate(r);
+      const initial=dynamicRate || pulseRate || target;
+      const t0=performance.now();
+      const duration=5000;
+
+      if(rateChangeTimer){clearInterval(rateChangeTimer);rateChangeTimer=null}
+      if(rateHoldTimer){clearTimeout(rateHoldTimer);rateHoldTimer=null}
+
+      rateChangeTimer=setInterval(()=>{
+        if(!running || paused || phase!=='energy'){
+          clearInterval(rateChangeTimer);rateChangeTimer=null;return;
+        }
+        const t=Math.min(1.15,(performance.now()-t0)/duration);
+        // Exactly linear transition for 5 seconds.
+        dynamicRate=initial+(target-initial)*t;
+        setPulseRate(dynamicRate);
+        if(t>=1){
+          clearInterval(rateChangeTimer);rateChangeTimer=null;
+          dynamicRate=target;
+          setPulseRate(target);
+          // Keep this rate fixed for a random duration from the configured MIN/MAX range.
+          const holdMin=Math.max(0,Number(rateHoldMinEl.value)||10);
+          const holdMax=Math.max(holdMin,Number(rateHoldMaxEl.value)||holdMin);
+          const holdMs=(holdMin+Math.random()*(holdMax-holdMin))*1000;
+          rateHoldTimer=setTimeout(()=>{
+            rateHoldTimer=null;
+            smoothDynamicRate();
+          },holdMs);
+        }
+      },30);
+    }
+    function startDynamicEnergyRate(){
+      if(!running || paused || phase!=='energy') return;
+      if(rateChangeTimer || rateHoldTimer) return;
+      smoothDynamicRate();
+    }
+    function nextRound(){if(!running)return;if(phase==='pause'){root.classList.remove('surprise-active');const a=getChoices();if(!a.length){statusEl.textContent='Βάλε τουλάχιστον μία επιλογή ενέργειας.';stop();return}const chosen=pick();const range=getEnergyRange(chosen);let lo=range.min,hi=range.max;if(lo>hi)[lo,hi]=[hi,lo];const seconds=Math.floor(Math.random()*(hi-lo+1))+lo;choiceEl.textContent=chosen;totalMs=seconds*1000;endAt=Date.now()+totalMs;phase='energy';startPulse(randomRate(rateFor(chosen,false)));startDynamicEnergyRate();statusEl.textContent='ΕΝΕΡΓΕΙΑ — μετράει αντίστροφα…';tick();return}let lo=Math.max(0,Math.floor(Number(pauseMinEl.value)||0)),hi=Math.max(0,Math.floor(Number(pauseMaxEl.value)||0));if(lo>hi)[lo,hi]=[hi,lo];const seconds=Math.floor(Math.random()*(hi-lo+1))+lo;choiceEl.textContent=pickPause();totalMs=seconds*1000;endAt=Date.now()+totalMs;stopPulse();pulseBtn.classList.remove('on');pulseBtn.classList.add('pause-on');phase='pause';statusEl.textContent='ΠΑΥΣΗ — μετράει αντίστροφα…';tick()}
+    function tick(){if(!running||paused)return;sessionElapsedMs=Date.now()-sessionStartAt;const sessionTotalMs=Math.max(1,Number(sessionTotalEl.value)||30)*60000;if(sessionElapsedMs>=sessionTotalMs){finishSession();return}const left=Math.max(0,endAt-Date.now());timeEl.textContent=fmt(left);barEl.style.width=totalMs?Math.max(0,Math.min(100,(left/totalMs)*100))+'%':'0%';if(maybeSurprise())return;if(left<=0){nextRound();return}timer=setTimeout(tick,80)}
     async function enterFullscreen(){try{if(!document.fullscreenElement&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen()}catch(e){}}
-    function start(){if(running)return;saveProgram();running=true;phase='pause';sessionElapsedMs=0;surpriseCount=0;surpriseActive=surpriseEnabledEl.checked&&(surpriseSessionRandomEl.checked?Math.random()<.5:true);switchPage(false);enterFullscreen();nextRound()}
-    function stop(){running=false;if(timer){clearTimeout(timer);timer=null}if(surpriseTimer){clearTimeout(surpriseTimer);surpriseTimer=null}stopPulse();root.classList.remove('surprise-active');statusEl.textContent='Σταμάτησε';barEl.style.width='0%'}
-    function skip(){if(!running)return;if(timer){clearTimeout(timer);timer=null}stopPulse();nextRound()}
+    function finishSession(){running=false;if(timer){clearTimeout(timer);timer=null}if(surpriseTimer){clearTimeout(surpriseTimer);surpriseTimer=null}if(rateChangeTimer){clearInterval(rateChangeTimer);rateChangeTimer=null}if(rateHoldTimer){clearTimeout(rateHoldTimer);rateHoldTimer=null}stopPulse();root.classList.remove('surprise-active');statusEl.textContent='Ολοκληρώθηκε η συνεδρία';barEl.style.width='0%'}
+    function start(){if(running)return;saveProgram();running=true;paused=false;phase='pause';sessionElapsedMs=0;sessionStartAt=Date.now();surpriseCount=0;surpriseActive=surpriseEnabledEl.checked&&(surpriseSessionRandomEl.checked?Math.random()<.5:true);switchPage(false);enterFullscreen();nextRound()}
+    let pauseStartedAt=0;
+    function togglePause(){
+      if(!running)return;
+      if(!paused){
+        paused=true;
+        pauseStartedAt=Date.now();
+        if(timer){clearTimeout(timer);timer=null}
+        if(rateChangeTimer){clearInterval(rateChangeTimer);rateChangeTimer=null}if(rateHoldTimer){clearTimeout(rateHoldTimer);rateHoldTimer=null}
+        stopPulse();
+        startBtn.textContent='RESUME';
+        statusEl.textContent='ΠΑΥΣΗ';
+      }else{
+        const pausedFor=Date.now()-pauseStartedAt;
+        paused=false;
+        endAt += pausedFor;
+        sessionStartAt += pausedFor;
+        startBtn.textContent='PAUSE';
+        if(phase==='energy'){startPulse(pulseRate||randomRate(rateFor(choiceEl.textContent,false)));startDynamicEnergyRate();}
+        else{
+          stopPulse();
+          pulseBtn.classList.remove('on');
+          pulseBtn.classList.add('pause-on');
+        }
+        tick();
+      }
+    }
+    function stop(){running=false;paused=false;startBtn.textContent='PAUSE';pauseStartedAt=0;if(timer){clearTimeout(timer);timer=null}if(surpriseTimer){clearTimeout(surpriseTimer);surpriseTimer=null}if(rateChangeTimer){clearInterval(rateChangeTimer);rateChangeTimer=null}if(rateHoldTimer){clearTimeout(rateHoldTimer);rateHoldTimer=null}stopPulse();root.classList.remove('surprise-active');statusEl.textContent='Σταμάτησε';barEl.style.width='0%'}
+    function skip(){if(!running)return;if(timer){clearTimeout(timer);timer=null}if(rateChangeTimer){clearInterval(rateChangeTimer);rateChangeTimer=null}if(rateHoldTimer){clearTimeout(rateHoldTimer);rateHoldTimer=null}stopPulse();nextRound()}
     function pulseInterval(hz){return 1000/(2*Math.max(.1,Math.min(20,hz)))}
-    function pulse(){pulseOn=!pulseOn;pulseBtn.classList.toggle('on',pulseOn)}
-    function startPulse(hz){stopPulse();pulse();pulseTimer=setInterval(pulse,pulseInterval(hz))}
-    function stopPulse(){if(pulseTimer){clearInterval(pulseTimer);pulseTimer=null}pulseOn=false;pulseBtn.classList.remove('on','pause-on')}
+    let pulseRate=1,pulsePhaseAt=0;
+    function pulse(){
+      pulseOn=!pulseOn;
+      pulseBtn.classList.toggle('on',pulseOn);
+    }
+    function setPulseRate(hz){pulseRate=Math.max(.1,Math.min(20,hz))}
+    function startPulse(hz){
+      if(pulseTimer){clearInterval(pulseTimer);pulseTimer=null}
+      setPulseRate(hz);
+      pulsePhaseAt=performance.now();
+      pulseBtn.classList.add('on');
+      pulseTimer=setInterval(()=>{
+        if(!running || paused || phase!=='energy') return;
+        const period=1000/pulseRate;
+        const pos=((performance.now()-pulsePhaseAt)%period)/period;
+        const linear=pos<0.5 ? pos*2 : 2-pos*2;
+        pulseBtn.style.opacity=String(0.10+0.90*linear);
+        const glow=12+58*linear;
+        const glow2=30+90*linear;
+        pulseBtn.style.boxShadow=`0 0 ${glow}px rgba(57,255,20,${0.25+0.45*linear}), 0 0 ${glow2}px rgba(57,255,20,${0.35+0.55*linear})`;
+        pulseBtn.style.background=`rgb(${57-20*linear},${255},${20-5*linear})`;
+      },30);
+    }
+    function stopPulse(){
+      if(pulseTimer){clearInterval(pulseTimer);pulseTimer=null}
+      pulseOn=false;
+      pulseBtn.classList.remove('on','pause-on');
+      pulseBtn.style.opacity='1';
+      pulseBtn.style.boxShadow='';
+      pulseBtn.style.background='';
+    }
     function switchPage(settings){pageSettings.classList.toggle('active',settings);pageRun.classList.toggle('active',!settings)}
     function goSettings(){switchPage(true)}
-    pulseMinEl.addEventListener('input',()=>{const a=Math.max(.1,Math.min(20,Number(pulseMinEl.value)||.1)),b=Math.max(.1,Math.min(20,Number(pulseMaxEl.value)||.1));pulseDisplay.textContent=Math.min(a,b).toFixed(1)+'–'+Math.max(a,b).toFixed(1)});
-    pulseMaxEl.addEventListener('input',()=>{const a=Math.max(.1,Math.min(20,Number(pulseMinEl.value)||.1)),b=Math.max(.1,Math.min(20,Number(pulseMaxEl.value)||.1));pulseDisplay.textContent=Math.min(a,b).toFixed(1)+'–'+Math.max(a,b).toFixed(1)});
-    startBtn.addEventListener('click',start);settingsStart.addEventListener('click',start);stopBtn.addEventListener('click',stop);skipBtn.addEventListener('click',skip);
+    startBtn.addEventListener('click',togglePause);settingsStart.addEventListener('click',start);stopBtn.addEventListener('click',stop);skipBtn.addEventListener('click',skip);
     settingsBack.addEventListener('click',goSettings);
     root.querySelectorAll('.program-btn').forEach(b=>b.addEventListener('click',()=>loadProgram(Number(b.dataset.program))));
-    loadProgram(0);
-    root.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('change',saveProgram));
+    loadProgram(0);renderRateEditors();
+    root.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('change',()=>{
+      saveProgram();
+      if(el.id==='min'||el.id==='max') renderRateEditors();
+    }));choicesEl.addEventListener('input',()=>{readRateEditors();renderRateEditors()});
+    energyEditorEl.addEventListener('input',e=>{
+      if(!e.target.matches('[data-energy-name]')) return;
+      const i=Number(e.target.dataset.energyName);
+      const lines=getLines(choicesEl);
+      const raw=Array.from(energyEditorEl.querySelectorAll('[data-energy-name]')).map(x=>x.value);
+      lines[i]=e.target.value;
+      choicesEl.value=raw.join('\n');
+      // Preserve the exact visible text being edited, including a temporarily blank row.
+      const p=programs[currentProgram];
+      const oldName=Object.keys(p.energyWeights||{})[i];
+      readRateEditors(); saveProgram();
+    });
+    addEnergyBtn.addEventListener('click',()=>{
+      const lines=getLines(choicesEl);
+      lines.push('ΝΕΑ ΕΝΕΡΓΕΙΑ');
+      choicesEl.value=lines.join('\n');
+      renderRateEditors();
+      const inputs=energyEditorEl.querySelectorAll('[data-energy-name]');
+      if(inputs.length) inputs[inputs.length-1].focus();
+    });pauseChoicesEl.addEventListener('input',()=>{readRateEditors();renderRateEditors()});
   })();
   </script>
 </div>
