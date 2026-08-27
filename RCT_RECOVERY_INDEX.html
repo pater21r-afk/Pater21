@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RCT – Ανάκτηση προγραμμάτων</title>
+<style>
+body{font-family:system-ui,-apple-system,sans-serif;margin:0;background:#f3f4f6;color:#111}
+main{max-width:650px;margin:auto;padding:18px}
+.card{background:white;border-radius:16px;padding:18px;margin:12px 0;box-shadow:0 2px 10px #0001}
+h1{font-size:22px}.ok{color:#087f23;font-weight:700}.warn{color:#a15c00}
+button{width:100%;padding:14px;margin-top:10px;border:0;border-radius:10px;background:#16803c;color:white;font-size:16px;font-weight:700}
+button.secondary{background:#555}
+pre{white-space:pre-wrap;word-break:break-word;background:#eee;padding:10px;border-radius:8px;font-size:12px}
+</style>
+</head>
+<body>
+<main>
+<h1>Ανάκτηση προγραμμάτων RCT</h1>
+<div class="card">
+<p>Αυτό το αρχείο <b>δεν διαγράφει τίποτα</b>. Ψάχνει το localStorage του ίδιου site για τα παλιά αποθηκευμένα προγράμματα.</p>
+<div id="status">Έλεγχος…</div>
+</div>
+<div class="card" id="results"></div>
+</main>
+<script>
+(function(){
+const target='randomChoiceTimerPrograms';
+const out=document.getElementById('results');
+const status=document.getElementById('status');
+
+function pretty(v){
+ try{return JSON.stringify(v,null,2)}catch(e){return String(v)}
+}
+function isProgramData(v){
+ if(!Array.isArray(v) || v.length<1 || v.length>20) return false;
+ return v.some(p=>p && typeof p==='object' &&
+   ('choices' in p || 'pauseChoices' in p || 'name' in p || 'min' in p || 'max' in p));
+}
+let found=[];
+let keys=[];
+try{
+ for(let i=0;i<localStorage.length;i++) keys.push(localStorage.key(i));
+}catch(e){
+ status.innerHTML='<span class="warn">Δεν επιτρέπεται η πρόσβαση στο localStorage από αυτή τη σελίδα.</span>';
+ return;
+}
+
+keys.forEach(k=>{
+ let raw=localStorage.getItem(k), parsed=null;
+ try{parsed=JSON.parse(raw)}catch(e){}
+ if(k===target || isProgramData(parsed)){
+   found.push({key:k,value:parsed,raw:raw});
+ }
+});
+
+if(found.length===0){
+ status.innerHTML='<span class="warn">Δεν βρέθηκαν αποθηκευμένα προγράμματα σε αυτό το site.</span>';
+ out.innerHTML='<b>Βρέθηκαν τα παρακάτω κλειδιά:</b><pre>'+pretty(keys)+'</pre>'+
+ '<p>Αυτό σημαίνει πιθανότατα ότι τα παλιά δεδομένα έχουν διαγραφεί ή βρίσκονται σε διαφορετικό origin/browser.</p>';
+ return;
+}
+
+status.innerHTML='<span class="ok">Βρέθηκαν '+found.length+' πιθανές αποθηκεύσεις.</span>';
+out.innerHTML='';
+found.forEach((item,idx)=>{
+ const card=document.createElement('div');
+ card.className='card';
+ const count=Array.isArray(item.value)?item.value.length:'?';
+ card.innerHTML='<b>Κλειδί:</b> '+item.key+'<br><b>Προγράμματα:</b> '+count+
+ '<button id="restore'+idx+'">Επαναφορά στο RCT</button>'+
+ '<button class="secondary" id="show'+idx+'">Προβολή δεδομένων</button>'+
+ '<pre id="pre'+idx+'" style="display:none"></pre>';
+ out.appendChild(card);
+ document.getElementById('restore'+idx).onclick=()=>{
+   try{
+     localStorage.setItem(target,item.raw);
+     alert('Έγινε επαναφορά. Τώρα άνοιξε ξανά το κανονικό RCT.');
+   }catch(e){alert('Αποτυχία: '+e.message)}
+ };
+ document.getElementById('show'+idx).onclick=()=>{
+   const p=document.getElementById('pre'+idx);
+   p.style.display=p.style.display==='none'?'block':'none';
+   p.textContent=pretty(item.value);
+ };
+});
+})();
+</script>
+</body>
+</html>
