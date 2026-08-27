@@ -200,7 +200,7 @@
 
   energyEditorEl.innerHTML='';
   names.forEach((name,i)=>{
-    const r=p.choiceRates[name]||{min:p.globalPulseMin,max:p.globalPulseMax};
+    const r=p.choiceRates[name]||{};
     const o=p.energyOverrides[name]||{};
     const w=p.energyWeights[name]??100;
     const row=document.createElement('div');
@@ -213,11 +213,11 @@
       '<span class="rt-unit">–</span>'+
       '<input type="number" min="1" max="86400" placeholder="'+Number(maxEl.value||60)+'" data-energy-time-max="'+i+'" value="'+(o.max??'')+'">'+
       '<span class="rt-unit">παλμοί/sec</span>'+
-      '<input type="number" min="0.1" max="20" step="0.1" placeholder="γενικό" data-rate-kind="choice" data-rate-index="'+i+'" data-rate-field="min" value="'+Number(r.min??p.globalPulseMin).toFixed(1)+'">'+
+      '<input type="number" min="0.1" max="20" step="0.1" placeholder="γενικό" data-rate-kind="choice" data-rate-index="'+i+'" data-rate-field="min" value="'+(r.min!=null ? Number(r.min).toFixed(1) : '')+'">'+
       '<span class="rt-unit">–</span>'+
-      '<input type="number" min="0.1" max="20" step="0.1" placeholder="γενικό" data-rate-kind="choice" data-rate-index="'+i+'" data-rate-field="max" value="'+Number(r.max??p.globalPulseMax).toFixed(1)+'">'+
+      '<input type="number" min="0.1" max="20" step="0.1" placeholder="γενικό" data-rate-kind="choice" data-rate-index="'+i+'" data-rate-field="max" value="'+(r.max!=null ? Number(r.max).toFixed(1) : '')+'">'+
       '<span class="rt-unit">βάρος</span>'+
-      '<input type="number" min="0" step="1" data-energy-weight="'+i+'" value="'+w+'">'+
+      '<input type="number" min="1" max="100" step="1" data-energy-weight="'+i+'" value="'+w+'">'+
       '</div>';
     energyEditorEl.appendChild(row);
   });
@@ -252,15 +252,20 @@ function readRateEditors(){
   root.querySelectorAll('[data-energy-weight]').forEach(el=>{
     const i=Number(el.dataset.energyWeight), name=getLines(choicesEl)[i];
     if(!name)return;
-    p.energyWeights[name]=Math.max(0,Number(el.value)||0);
+    p.energyWeights[name]=Math.max(1,Math.min(100,Number(el.value)||100));
   });
 
   root.querySelectorAll('[data-rate-kind]').forEach(el=>{
     const names=el.dataset.rateKind==='choice'?getLines(choicesEl):getLines(pauseChoicesEl);
     const name=names[Number(el.dataset.rateIndex)]; if(!name)return;
     const rates=el.dataset.rateKind==='choice'?p.choiceRates:p.pauseRates;
-    rates[name]=rates[name]||{min:1,max:1};
-    rates[name][el.dataset.rateField]=Math.max(.1,Math.min(20,Number(el.value)||1));
+    if(el.value.trim()===''){
+      if(rates[name]) delete rates[name][el.dataset.rateField];
+      if(rates[name] && rates[name].min==null && rates[name].max==null) delete rates[name];
+    }else{
+      rates[name]=rates[name]||{};
+      rates[name][el.dataset.rateField]=Math.max(.1,Math.min(20,Number(el.value)||1));
+    }
   });
 }
 
@@ -269,10 +274,10 @@ function weightedEnergyChoice(){
   if(!names.length)return '';
   const p=programs[currentProgram], weights=p.energyWeights||{};
   let total=0;
-  names.forEach(n=>{ total+=Math.max(0,Number(weights[n]??100)); });
+  names.forEach(n=>{ total+=Math.max(1,Math.min(100,Number(weights[n]??100))); });
   if(total<=0)return names[Math.floor(Math.random()*names.length)];
   let x=Math.random()*total;
-  for(const n of names){ x-=Math.max(0,Number(weights[n]??100)); if(x<0)return n; }
+  for(const n of names){ x-=Math.max(1,Math.min(100,Number(weights[n]??100))); if(x<0)return n; }
   return names[names.length-1];
 }
 
@@ -294,7 +299,7 @@ function randomDifferentRate(min,max,current){
 
 function rateFor(name,isPause){
       const p=programs[currentProgram];
-      const r=(isPause?p.pauseRates:p.choiceRates)?.[name]||{min:1,max:1};
+      const r=(isPause?p.pauseRates:p.choiceRates)?.[name]||(isPause?{min:1,max:1}:{min:p.globalPulseMin??0.5,max:p.globalPulseMax??2});
       let min=Math.max(.1,Math.min(20,Number(r.min)||1));
       let max=Math.max(.1,Math.min(20,Number(r.max)||min));
       if(min>max)[min,max]=[max,min];
