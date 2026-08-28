@@ -269,6 +269,30 @@
 
 #rouletteSpinBtn{display:none !important;}
 
+
+/* v29 pause controls */
+#pauseRates .pause-row{display:flex;align-items:center;gap:6px;margin:7px 0;flex-wrap:wrap}
+#pauseRates .pause-name-input{width:120px}
+#pauseRates .pause-controls-inline{display:flex;align-items:center;gap:6px;flex:1;flex-wrap:wrap}
+#pauseRates .pause-controls-inline input{min-width:58px;max-width:85px}
+#pauseRates .inherited-value{color:#aaa!important;-webkit-text-fill-color:#aaa!important}
+#pauseRates .inherited-value.has-own-value{color:#222!important;-webkit-text-fill-color:#222!important}
+@media(max-width:700px){#pauseRates .pause-controls-inline{gap:4px}#pauseRates .pause-name-input{width:95px}}
+
+/* v30 — pause pulse fields: gray while inherited, black when overridden */
+#pauseAdvancedRows input[data-pf="pmin"]:not(.has-own-value),
+#pauseAdvancedRows input[data-pf="pmax"]:not(.has-own-value){
+  color:#aaa !important;
+  -webkit-text-fill-color:#aaa !important;
+  opacity:1 !important;
+}
+#pauseAdvancedRows input[data-pf="pmin"].has-own-value,
+#pauseAdvancedRows input[data-pf="pmax"].has-own-value{
+  color:#222 !important;
+  -webkit-text-fill-color:#222 !important;
+  opacity:1 !important;
+}
+
 </style>
   <div class="rt-wrap">
     <div class="rt-title">Random Choice Timer</div>
@@ -449,7 +473,7 @@
   p.choiceRates=p.choiceRates||{};
   p.globalPulseMin=p.globalPulseMin??0.5; p.globalPulseMax=p.globalPulseMax??2;
   Object.keys(p.choiceRates).forEach(k=>{const r=p.choiceRates[k]; if(!r)return; if(r.min!==undefined && Number(r.min)===Number(p.globalPulseMin)) delete r.min; if(r.max!==undefined && Number(r.max)===Number(p.globalPulseMax)) delete r.max; if(!Object.keys(r).length) delete p.choiceRates[k];});
-  p.pauseRates=p.pauseRates||{};
+  p.pauseRates=p.pauseRates||{}; p.pauseOverrides=p.pauseOverrides||{}; p.pauseWeights=p.pauseWeights||{};
   p.energyOverrides=p.energyOverrides||{};
   p.energyWeights=p.energyWeights||{};
   // Migration from the previous version: old untouched default was 10.
@@ -492,19 +516,27 @@
     el.addEventListener('input',()=>el.classList.toggle('has-own-value', el.value.trim()!==''));
   });
 
-  // Keep pause rate controls below the pause list as before.
+  // Pause controls: time MIN-MAX, pulse MIN-MAX, weight and delete. Empty values inherit globals.
   pauseRatesEl.innerHTML='';
   getLines(pauseChoicesEl).forEach((name,i)=>{
-    const r=p.pauseRates[name]||{};
-    const row=document.createElement('div'); row.className='rt-choice-row';
-    row.innerHTML='<span class="rate-name">'+name+'</span>'+
-      '<span class="rt-unit">παλμοί/sec</span>'+
-      '<input class="rt-mini inherited-value" type="number" min="0.1" max="20" step="0.1" placeholder="1.0" data-rate-kind="pause" data-rate-index="'+i+'" data-rate-field="min" value="'+(r.min??'')+'">'+
+    const r=p.pauseRates[name]||{}; const o=p.pauseOverrides[name]||{}; const w=p.pauseWeights[name]??100;
+    const row=document.createElement('div'); row.className='pause-row';
+    row.innerHTML='<input class="pause-name-input" type="text" value="'+name.replace(/"/g,'&quot;')+'" readonly placeholder="Όνομα παύσης">'+
+      '<div class="pause-controls-inline">'+
+      '<span class="rt-unit">sec</span>'+
+      '<input class="inherited-value" type="number" min="0" max="86400" step="1" placeholder="'+Number(p.pauseMin||15)+'" data-pause-time-min="'+i+'" value="'+(o.min??'')+'">'+
       '<span class="rt-unit">–</span>'+
-      '<input class="rt-mini inherited-value" type="number" min="0.1" max="20" step="0.1" placeholder="1.0" data-rate-kind="pause" data-rate-index="'+i+'" data-rate-field="max" value="'+(r.max??'')+'">'+
-      '<button type="button" class="rt-danger" data-pause-delete="'+i+'" title="Διαγραφή παύσης">✕</button>';
+      '<input class="inherited-value" type="number" min="0" max="86400" step="1" placeholder="'+Number(p.pauseMax||30)+'" data-pause-time-max="'+i+'" value="'+(o.max??'')+'">'+
+      '<span class="rt-unit">παλμοί/sec</span>'+
+      '<input class="inherited-value" type="number" min="0.1" max="20" step="0.1" placeholder="χωρίς παλμό" data-rate-kind="pause" data-rate-index="'+i+'" data-rate-field="min" value="'+(r.min??'')+'">'+
+      '<span class="rt-unit">–</span>'+
+      '<input class="inherited-value" type="number" min="0.1" max="20" step="0.1" placeholder="χωρίς παλμό" data-rate-kind="pause" data-rate-index="'+i+'" data-rate-field="max" value="'+(r.max??'')+'">'+
+      '<span class="rt-unit">βάρος</span>'+
+      '<input class="pause-weight-input" type="number" min="0" step="1" data-pause-weight="'+i+'" value="'+w+'">'+
+      '<button type="button" class="rt-danger" data-pause-delete="'+i+'" title="Διαγραφή">✕</button></div>';
     pauseRatesEl.appendChild(row);
   });
+  root.querySelectorAll('.inherited-value').forEach(el=>{el.classList.toggle('has-own-value',el.value.trim()!=='');});
 }
 function readRateEditors(){
   const p=programs[currentProgram];
@@ -524,6 +556,19 @@ function readRateEditors(){
     const i=Number(el.dataset.energyWeight), name=getEnergyEditorLines()[i];
     if(!name)return;
     p.energyWeights[name]=Math.max(0,Number(el.value)||0);
+  });
+
+  p.pauseOverrides=p.pauseOverrides||{}; p.pauseWeights=p.pauseWeights||{};
+  root.querySelectorAll('[data-pause-time-min],[data-pause-time-max]').forEach(el=>{
+    const i=Number(el.dataset.pauseTimeMin??el.dataset.pauseTimeMax), name=getLines(pauseChoicesEl)[i]; if(!name)return;
+    p.pauseOverrides[name]=p.pauseOverrides[name]||{};
+    const key=el.dataset.pauseTimeMin!==undefined?'min':'max';
+    if(el.value.trim()==='') delete p.pauseOverrides[name][key]; else p.pauseOverrides[name][key]=Math.max(0,Number(el.value)||0);
+    if(!Object.keys(p.pauseOverrides[name]).length) delete p.pauseOverrides[name];
+  });
+  root.querySelectorAll('[data-pause-weight]').forEach(el=>{
+    const i=Number(el.dataset.pauseWeight), name=getLines(pauseChoicesEl)[i]; if(!name)return;
+    p.pauseWeights[name]=Math.max(0,Number(el.value)||0);
   });
 
   root.querySelectorAll('[data-rate-kind]').forEach(el=>{
@@ -616,7 +661,9 @@ function rateFor(name,isPause){
       return {min:Math.max(1,Math.floor(Number(minEl.value)||30)),max:Math.max(1,Math.floor(Number(maxEl.value)||60))};
     }
     function getPauseChoices(){return pauseChoicesEl.value.split(/\n|,/).map(x=>x.trim()).filter(Boolean)}
-    function pickPause(){const a=getPauseChoices();if(!a.length)return 'ΠΑΥΣΗ';let pool=a;if(pauseNoRepeatEl.checked&&a.length>1&&lastPauseChoice!==null)pool=a.filter(x=>x!==lastPauseChoice);const x=pool[Math.floor(Math.random()*pool.length)];lastPauseChoice=x;return x}
+    function getPauseRange(name){const o=programs[currentProgram].pauseOverrides||{},v=o[name];if(v&&v.min!==undefined&&v.max!==undefined&&Number(v.min)>=0&&Number(v.max)>=0)return {min:Number(v.min),max:Number(v.max)};return {min:Math.max(0,Number(pauseMinEl.value)||0),max:Math.max(0,Number(pauseMaxEl.value)||0)}}
+    function weightedPauseChoice(pool){const p=programs[currentProgram],w=p.pauseWeights||{};let total=0;pool.forEach(n=>total+=Math.max(0,Number(w[n]??100)));if(total<=0)return pool[Math.floor(Math.random()*pool.length)];let x=Math.random()*total;for(const n of pool){x-=Math.max(0,Number(w[n]??100));if(x<0)return n}return pool[pool.length-1]}
+    function pickPause(){const a=getPauseChoices();if(!a.length)return 'ΠΑΥΣΗ';let pool=a;if(pauseNoRepeatEl.checked&&a.length>1&&lastPauseChoice!==null)pool=a.filter(x=>x!==lastPauseChoice);const x=weightedPauseChoice(pool);lastPauseChoice=x;return x}
     function getSurpriseChoices(){return surpriseProgramRandomEl.checked?getChoices().concat(getPauseChoices()):surpriseChoicesEl.value.split(/\n|,/).map(x=>x.trim()).filter(Boolean)}
     function maybeSurprise(){const maxCount=Math.max(1,Math.min(100,Math.floor(Number(surpriseCountEl.value)||1)));if(!running||!surpriseActive||surpriseCount>=maxCount||sessionElapsedMs<Math.max(0,Number(surpriseDelayEl.value)||0)*1000)return false;const chance=Math.max(0,Math.min(100,Number(surpriseChanceEl.value)||0));if(Math.random()*100>=chance)return false;const a=getSurpriseChoices();if(!a.length)return false;surpriseCount++;const lo=Math.max(1,Math.floor(Number(surpriseMinEl.value)||1)),hi=Math.max(lo,Math.floor(Number(surpriseMaxEl.value)||lo)),seconds=Math.floor(Math.random()*(hi-lo+1))+lo;choiceEl.textContent=a[Math.floor(Math.random()*a.length)];totalMs=seconds*1000;endAt=Date.now()+totalMs;stopPulse();pulseBtn.classList.add('pause-on');phase='pause';statusEl.textContent='';root.classList.add('surprise-active');tick();return true}
     function fmt(ms){let s=Math.max(0,Math.ceil(ms/1000));let m=Math.floor(s/60),sec=s%60;return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0')}
@@ -624,46 +671,16 @@ function rateFor(name,isPause){
     let dynamicRate=0;
     let rateChangeTimer=null;
     let rateHoldTimer=null;
-    function smoothDynamicRate(){
-      if(!running || paused || phase!=='energy') return;
-      const r=rateFor(choiceEl.textContent,false);
-      const target=randomRate(r);
-      const initial=dynamicRate || pulseRate || target;
-      const t0=performance.now();
-      const duration=5000;
-
-      if(rateChangeTimer){clearInterval(rateChangeTimer);rateChangeTimer=null}
-      if(rateHoldTimer){clearTimeout(rateHoldTimer);rateHoldTimer=null}
-
-      rateChangeTimer=setInterval(()=>{
-        if(!running || paused || phase!=='energy'){
-          clearInterval(rateChangeTimer);rateChangeTimer=null;return;
-        }
-        const t=Math.min(1.15,(performance.now()-t0)/duration);
-        // Exactly linear transition for 5 seconds.
-        dynamicRate=initial+(target-initial)*t;
-        setPulseRate(dynamicRate);
-        if(t>=1){
-          clearInterval(rateChangeTimer);rateChangeTimer=null;
-          dynamicRate=target;
-          setPulseRate(target);
-          // Keep this rate fixed for a random duration from the configured MIN/MAX range.
-          const holdMin=Math.max(0,Number(rateHoldMinEl.value)||10);
-          const holdMax=Math.max(holdMin,Number(rateHoldMaxEl.value)||holdMin);
-          const holdMs=(holdMin+Math.random()*(holdMax-holdMin))*1000;
-          rateHoldTimer=setTimeout(()=>{
-            rateHoldTimer=null;
-            smoothDynamicRate();
-          },holdMs);
-        }
-      },30);
-    }
-    function startDynamicEnergyRate(){
-      if(!running || paused || phase!=='energy') return;
-      if(rateChangeTimer || rateHoldTimer) return;
-      smoothDynamicRate();
-    }
-    function nextRound(){if(!running)return;if(phase==='pause'){root.classList.remove('surprise-active');const a=getChoices();if(!a.length){statusEl.textContent='Βάλε τουλάχιστον μία επιλογή ενέργειας.';stop();return}const chosen=pick();const range=getEnergyRange(chosen);let lo=range.min,hi=range.max;if(lo>hi)[lo,hi]=[hi,lo];const seconds=Math.floor(Math.random()*(hi-lo+1))+lo;choiceEl.textContent=chosen;totalMs=seconds*1000;endAt=Date.now()+totalMs;phase='energy';startPulse(randomRate(rateFor(chosen,false)));startDynamicEnergyRate();statusEl.textContent='ΕΝΕΡΓΕΙΑ — μετράει αντίστροφα…';tick();return}let lo=Math.max(0,Math.floor(Number(pauseMinEl.value)||0)),hi=Math.max(0,Math.floor(Number(pauseMaxEl.value)||0));if(lo>hi)[lo,hi]=[hi,lo];const seconds=Math.floor(Math.random()*(hi-lo+1))+lo;const pauseName=pickPause();choiceEl.textContent=pauseName;totalMs=seconds*1000;endAt=Date.now()+totalMs;phase='pause';const pauseRate=rateFor(pauseName,true);if(pauseRate){startPulse(randomRate(pauseRate));}else{stopPulse();pulseBtn.classList.remove('on','pulse-on','active');pulseBtn.classList.add('pause-on');}statusEl.textContent='ΠΑΥΣΗ — μετράει αντίστροφα…';tick()}
+    function smoothDynamicRate(){}
+    function startDynamicEnergyRate(){}
+    function nextRound(){if(!running)return;if(phase==='pause'){root.classList.remove('surprise-active');const a=getChoices();if(!a.length){statusEl.textContent='Βάλε τουλάχιστον μία επιλογή ενέργειας.';stop();return}const chosen=pick();const range=getEnergyRange(chosen);let lo=range.min,hi=range.max;if(lo>hi)[lo,hi]=[hi,lo];const seconds=Math.floor(Math.random()*(hi-lo+1))+lo;choiceEl.textContent=chosen;totalMs=seconds*1000;endAt=Date.now()+totalMs;phase='energy';startPulse(randomRate(rateFor(chosen,false)),rateFor(chosen,false));startDynamicEnergyRate();statusEl.textContent='ΕΝΕΡΓΕΙΑ — μετράει αντίστροφα…';tick();return}const pauseName=pickPause();let prange=getPauseRange(pauseName),lo=Math.max(0,Math.floor(prange.min)),hi=Math.max(0,Math.floor(prange.max));if(lo>hi)[lo,hi]=[hi,lo];const seconds=Math.floor(Math.random()*(hi-lo+1))+lo;choiceEl.textContent=pauseName;totalMs=seconds*1000;endAt=Date.now()+totalMs;phase='pause';const pauseRate=rateFor(pauseName,true);
+if(pauseRate){
+  startPulse(randomRate(pauseRate),pauseRate);
+}else{
+  stopPulse();
+  pulseBtn.classList.remove('on','pulse-on','active');
+  pulseBtn.classList.add('pause-on');
+}statusEl.textContent='ΠΑΥΣΗ — μετράει αντίστροφα…';tick()}
     function tick(){if(!running||paused)return;sessionElapsedMs=Date.now()-sessionStartAt;
       const p=programs[currentProgram];
       const sessionTotalMs=Math.max(1,Number(p._sessionTotalSeconds||p.sessionTotal*60||30*60))*1000;
@@ -741,32 +758,91 @@ function rateFor(name,isPause){
       if(!pulseMuted&&running&&!paused)playPulseBeep();
     });
     updateMuteButton();
-    function startPulse(hz){
+    function startPulse(hz, pulseRange){
       if(pulseTimer){clearInterval(pulseTimer);pulseTimer=null}
-      setPulseRate(hz);
-      pulsePhaseAt=performance.now();
-      pulseBeatIndex=-1;
+
+      const MIN_HZ=0.7;
+      const MAX_HZ=20;
+      const range=(pulseRange && Number.isFinite(Number(pulseRange.min)) && Number.isFinite(Number(pulseRange.max)))
+        ? {min:Math.max(MIN_HZ,Number(pulseRange.min)),max:Math.min(MAX_HZ,Number(pulseRange.max))}
+        : null;
+
+      if(range && range.min>range.max)[range.min,range.max]=[range.max,range.min];
+
+      function pickTarget(current){
+        if(!range) return Math.max(MIN_HZ,Math.min(MAX_HZ,Number(current)||MIN_HZ));
+        const min=range.min, max=range.max;
+        if(max<=min) return min;
+
+        // Successive target rates differ by at least 0.7 Hz whenever the
+        // configured range is wide enough to permit it.
+        const candidates=[];
+        const lo=Math.ceil(min*10-1e-9), hi=Math.floor(max*10+1e-9);
+        for(let n=lo;n<=hi;n++){
+          const v=n/10;
+          if(Math.abs(v-current)>=0.7-1e-9) candidates.push(v);
+        }
+        if(candidates.length) return candidates[Math.floor(Math.random()*candidates.length)];
+        // If the configured range is narrower than 0.7 Hz, a 0.7 change is
+        // mathematically impossible, so use a random point in the range.
+        return min+Math.random()*(max-min);
+      }
+
+      let currentRate=Math.max(MIN_HZ,Math.min(MAX_HZ,Number(hz)||MIN_HZ));
+      if(range) currentRate=Math.max(range.min,Math.min(range.max,currentRate));
+      let targetRate=range?pickTarget(currentRate):currentRate;
+
+      // Every target transition lasts exactly 5 seconds.
+      const RAMP_MS=5000;
+      let rampStart=performance.now();
+      let rampFrom=currentRate;
+      let beatStart=rampStart;
+      let beatPeriod=1000/currentRate;
+
       initPulseAudio();
-      // First beep is exactly when the green pulse starts.
-      pulseBtn.classList.add('on'); if(phase==='pause') pulseBtn.classList.add('pause-on');
+      pulseBtn.classList.add('on');
+      if(phase==='pause') pulseBtn.classList.add('pause-on');
       if(!pulseMuted)playPulseBeep();
-      pulseBeatIndex=0;
+
       pulseTimer=setInterval(()=>{
         if(!running||paused)return;
-        const elapsed=performance.now()-pulsePhaseAt;
-        const period=1000/pulseRate;
-        const beatIndex=Math.floor(elapsed/period);
-        if(beatIndex!==pulseBeatIndex){
-          pulseBeatIndex=beatIndex;
+
+        const now=performance.now();
+
+        // Smoothly interpolate the frequency toward the target.
+        const progress=Math.max(0,Math.min(1,(now-rampStart)/RAMP_MS));
+        const eased=progress*progress*(3-2*progress);
+        currentRate=rampFrom+(targetRate-rampFrom)*eased;
+
+        // At the end of the 5-second ramp, choose the next target and start
+        // another 5-second ramp. The choice happens only at a beat boundary.
+        if(progress>=1 && now-beatStart>=beatPeriod){
+          currentRate=targetRate;
+          rampFrom=currentRate;
+          targetRate=range?pickTarget(currentRate):currentRate;
+          rampStart=now;
+        }
+
+        // Pulse boundary. Exactly one beep per completed cycle.
+        if(now-beatStart>=beatPeriod){
+          beatStart=now;
+          beatPeriod=1000/Math.max(MIN_HZ,currentRate);
           if(!pulseMuted)playPulseBeep();
         }
-        const pos=(elapsed%period)/period;
+
+        const pos=Math.max(0,Math.min(1,(now-beatStart)/beatPeriod));
         const linear=pos<0.5 ? pos*2 : 2-pos*2;
         pulseBtn.style.opacity=String(0.10+0.90*linear);
         const glow=12+58*linear;
         const glow2=30+90*linear;
-        pulseBtn.style.boxShadow=`0 0 ${glow}px rgba(57,255,20,${0.25+0.45*linear}), 0 0 ${glow2}px rgba(57,255,20,${0.35+0.55*linear})`;
-        pulseBtn.style.background=`rgb(${57-20*linear},255,${20-5*linear})`;
+
+        if(phase==='pause'){
+          pulseBtn.style.boxShadow=`0 0 ${glow}px rgba(239,68,68,${0.25+0.45*linear}), 0 0 ${glow2}px rgba(239,68,68,${0.35+0.55*linear})`;
+          pulseBtn.style.background='#ef4444';
+        }else{
+          pulseBtn.style.boxShadow=`0 0 ${glow}px rgba(57,255,20,${0.25+0.45*linear}), 0 0 ${glow2}px rgba(57,255,20,${0.35+0.55*linear})`;
+          pulseBtn.style.background=`rgb(${57-20*linear},255,${20-5*linear})`;
+        }
       },20);
     }
     function stopPulse(){
@@ -816,6 +892,8 @@ function rateFor(name,isPause){
       rows.splice(i,1);
       pauseChoicesEl.value=rows.join('\n');
       if(p&&p.pauseRates) delete p.pauseRates[deleted];
+      if(p&&p.pauseOverrides) delete p.pauseOverrides[deleted];
+      if(p&&p.pauseWeights) delete p.pauseWeights[deleted];
       saveProgram();
       renderRateEditors();
     });
@@ -1177,3 +1255,48 @@ function rateFor(name,isPause){
 
 </script>
 </div>
+
+<style id="v44-pause-one-line">
+/* v44: exact same row geometry as Energy on all screen sizes */
+#pauseRates .pause-row{
+  display:grid !important;
+  grid-template-columns:minmax(105px,150px) minmax(0,1fr) !important;
+  gap:8px !important;
+  align-items:center !important;
+  flex-wrap:nowrap !important;
+  min-width:570px !important;
+  margin:7px 0 !important;
+}
+#pauseRates .pause-name-input{
+  width:auto !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
+}
+#pauseRates .pause-controls-inline{
+  display:grid !important;
+  grid-template-columns:auto 62px auto 62px auto 62px auto 62px auto 58px auto !important;
+  gap:4px !important;
+  align-items:center !important;
+  min-width:0 !important;
+  width:auto !important;
+  flex:initial !important;
+  flex-wrap:nowrap !important;
+}
+#pauseRates .pause-controls-inline input{
+  width:62px !important;
+  min-width:0 !important;
+  max-width:none !important;
+  box-sizing:border-box !important;
+}
+#pauseRates .pause-controls-inline .pause-weight-input{
+  width:58px !important;
+}
+#pauseRates .pause-controls-inline .rt-unit{
+  white-space:nowrap !important;
+  font-size:10px !important;
+}
+@media(max-width:700px){
+  #pauseRates{overflow-x:auto !important}
+  #pauseRates .pause-row{min-width:570px !important}
+}
+</style>
