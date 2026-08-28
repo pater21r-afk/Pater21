@@ -107,6 +107,168 @@
   -webkit-text-fill-color:#222 !important;
 }
 
+
+/* Pause pulse inheritance */
+#pauseRates input.inherited-value:not(.has-own-value){
+  color:#aaa !important;
+  -webkit-text-fill-color:#aaa !important;
+}
+#pauseRates input.inherited-value::placeholder{
+  color:#aaa !important;
+  -webkit-text-fill-color:#aaa !important;
+  opacity:1 !important;
+}
+#pauseRates input.inherited-value.has-own-value{
+  color:#222 !important;
+  -webkit-text-fill-color:#222 !important;
+}
+
+
+/* PAUSE LIGHT MUST ALWAYS BE RED */
+#pulseBtn.pause-on{
+  background:#ef4444 !important;
+  border-color:#ef4444 !important;
+}
+#pulseBtn.pause-on.on,
+#pulseBtn.pause-on.pulse{
+  background:#ef4444 !important;
+  border-color:#ef4444 !important;
+}
+
+
+/* Pause pulse must remain RED even when generic .on state is active */
+#pulseBtn.pause-on,
+#pulseBtn.pause-on.on,
+#pulseBtn.pause-on.pulse-on,
+#pulseBtn.pause-on.active{
+  background:#ef4444 !important;
+  border-color:#ef4444 !important;
+  color:#fff !important;
+}
+#pulseBtn.pause-on::before,
+#pulseBtn.pause-on::after{
+  background:#ef4444 !important;
+}
+
+
+/* PAUSE GLOW MUST ALSO BE RED */
+#pulseBtn.pause-on,
+#pulseBtn.pause-on.on,
+#pulseBtn.pause-on.pulse-on,
+#pulseBtn.pause-on.active{
+  background:#ef4444 !important;
+  border-color:#ef4444 !important;
+  box-shadow:0 0 0 0 #ef4444, 0 0 22px 8px rgba(239,68,68,.85) !important;
+}
+#pulseBtn.pause-on.on::before,
+#pulseBtn.pause-on.pulse-on::before,
+#pulseBtn.pause-on.active::before,
+#pulseBtn.pause-on.on::after,
+#pulseBtn.pause-on.pulse-on::after,
+#pulseBtn.pause-on.active::after{
+  background:#ef4444 !important;
+  border-color:#ef4444 !important;
+  box-shadow:0 0 22px 8px rgba(239,68,68,.85) !important;
+}
+
+
+/* Stronger red glow when pause pulse reaches full brightness */
+#pulseBtn.pause-on.on,
+#pulseBtn.pause-on.pulse-on,
+#pulseBtn.pause-on.active{
+  box-shadow:
+    0 0 8px 3px rgba(239,68,68,.95),
+    0 0 28px 12px rgba(239,68,68,.90),
+    0 0 55px 22px rgba(239,68,68,.60) !important;
+}
+
+
+
+
+
+/* Pause pulse: exact same light/ring size as energy pulse, but RED */
+#pulseBtn.pause-on{
+  background:#ef4444 !important;
+  border-color:#ef4444 !important;
+  color:#fff !important;
+  filter:none !important;
+}
+#pulseBtn.pause-on.on,
+#pulseBtn.pause-on.pulse-on,
+#pulseBtn.pause-on.active{
+  background:#ef4444 !important;
+  border-color:#ef4444 !important;
+  color:#fff !important;
+  filter:none !important;
+  box-shadow:
+    0 0 0 0 rgba(239,68,68,0),
+    0 0 14px 5px rgba(239,68,68,.70) !important;
+}
+
+
+/* Pause red light: keep the same gray perimeter ring as the green light */
+#pulseBtn.pause-on{
+  outline: 3px solid #777 !important;
+  outline-offset: 0 !important;
+}
+
+
+/* Stronger red glow — same diameter and gray ring */
+#pulseBtn.pause-on.on,
+#pulseBtn.pause-on.pulse-on,
+#pulseBtn.pause-on.active{
+  box-shadow:
+    0 0 5px 2px rgba(239,68,68,1),
+    0 0 18px 7px rgba(239,68,68,.95),
+    0 0 34px 12px rgba(239,68,68,.78) !important;
+}
+
+
+/* v26: pause light same diameter as green, lighter gray ring, red flash */
+#pulseBtn.pause-on{
+  outline:3px solid #9a9a9a !important;
+  outline-offset:0 !important;
+}
+#pulseBtn.pause-on.on,
+#pulseBtn.pause-on.pulse-on,
+#pulseBtn.pause-on.active{
+  animation: pauseRedFlash .55s ease-out !important;
+  box-shadow:
+    0 0 5px 2px rgba(239,68,68,1),
+    0 0 18px 7px rgba(239,68,68,.95),
+    0 0 34px 12px rgba(239,68,68,.78) !important;
+}
+@keyframes pauseRedFlash{
+  0%{
+    background:#ff6b6b !important;
+    box-shadow:
+      0 0 8px 3px rgba(255,90,90,1),
+      0 0 28px 10px rgba(255,90,90,1),
+      0 0 52px 20px rgba(255,90,90,.85) !important;
+  }
+  35%{
+    background:#ff3b3b !important;
+    box-shadow:
+      0 0 6px 3px rgba(255,70,70,1),
+      0 0 24px 9px rgba(255,70,70,.98),
+      0 0 44px 16px rgba(255,70,70,.78) !important;
+  }
+  100%{
+    background:#ef4444 !important;
+    box-shadow:
+      0 0 5px 2px rgba(239,68,68,1),
+      0 0 18px 7px rgba(239,68,68,.95),
+      0 0 34px 12px rgba(239,68,68,.78) !important;
+  }
+}
+
+
+/* v28: roulette starts by tapping the wheel; hide spin instructions/status */
+#rouletteHint{display:none !important;}
+
+
+#rouletteSpinBtn{display:none !important;}
+
 </style>
   <div class="rt-wrap">
     <div class="rt-title">Random Choice Timer</div>
@@ -211,7 +373,7 @@
       <div style="width:min(560px,94vw);max-height:88vh;overflow:auto;background:#fff;color:#111;border-radius:20px;padding:20px;box-shadow:0 20px 70px rgba(0,0,0,.6)">
         <div id="rouletteOverlayTitle" style="font-size:24px;font-weight:800;text-align:center">🎰 Ρουλέτα</div>
         <div id="rouletteWheel" style="font-size:34px;font-weight:900;text-align:center;margin:18px 0"></div>
-        <div id="rouletteHint" class="rct-wheel-hint">Πάτησε τον τροχό για να γυρίσει!</div>
+        <div id="rouletteHint" class="rct-wheel-hint"></div>
         <button id="rouletteSpinBtn" class="rct-wheel-spin" type="button">🎯 ΠΑΤΗΣΕ ΓΙΑ ΝΑ ΓΥΡΙΣΕΙ</button>
         <button id="rouletteContinueBtn" class="rct-wheel-continue" type="button" disabled>▶ ΣΥΝΕΧΕΙΑ ΠΡΟΓΡΑΜΜΑΤΟΣ</button>
         <button id="rouletteOverlayClose" type="button" style="width:100%;margin-top:10px">Κλείσιμο</button>
@@ -339,7 +501,8 @@
       '<span class="rt-unit">παλμοί/sec</span>'+
       '<input class="rt-mini inherited-value" type="number" min="0.1" max="20" step="0.1" placeholder="1.0" data-rate-kind="pause" data-rate-index="'+i+'" data-rate-field="min" value="'+(r.min??'')+'">'+
       '<span class="rt-unit">–</span>'+
-      '<input class="rt-mini inherited-value" type="number" min="0.1" max="20" step="0.1" placeholder="1.0" data-rate-kind="pause" data-rate-index="'+i+'" data-rate-field="max" value="'+(r.max??'')+'">';
+      '<input class="rt-mini inherited-value" type="number" min="0.1" max="20" step="0.1" placeholder="1.0" data-rate-kind="pause" data-rate-index="'+i+'" data-rate-field="max" value="'+(r.max??'')+'">'+
+      '<button type="button" class="rt-danger" data-pause-delete="'+i+'" title="Διαγραφή παύσης">✕</button>';
     pauseRatesEl.appendChild(row);
   });
 }
@@ -367,8 +530,15 @@ function readRateEditors(){
     const names=el.dataset.rateKind==='choice'?getLines(choicesEl):getLines(pauseChoicesEl);
     const name=names[Number(el.dataset.rateIndex)]; if(!name)return;
     const rates=el.dataset.rateKind==='choice'?p.choiceRates:p.pauseRates;
-    rates[name]=rates[name]||{min:1,max:1};
-    rates[name][el.dataset.rateField]=Math.max(.1,Math.min(20,Number(el.value)||1));
+    if(el.value.trim()===''){
+      if(rates[name]){
+        delete rates[name][el.dataset.rateField];
+        if(rates[name].min==null && rates[name].max==null) delete rates[name];
+      }
+    }else{
+      rates[name]=rates[name]||{};
+      rates[name][el.dataset.rateField]=Math.max(.1,Math.min(20,Number(el.value)));
+    }
   });
 }
 
@@ -402,9 +572,11 @@ function randomDifferentRate(min,max,current){
 
 function rateFor(name,isPause){
       const p=programs[currentProgram];
-      const r=(isPause?p.pauseRates:p.choiceRates)?.[name]||{min:1,max:1};
-      let min=Math.max(.1,Math.min(20,Number(r.min)||1));
-      let max=Math.max(.1,Math.min(20,Number(r.max)||min));
+      const r=(isPause?p.pauseRates:p.choiceRates)?.[name];
+      if(isPause && (!r || (r.min==null && r.max==null))) return null;
+      const rr=r||{min:p.globalPulseMin,max:p.globalPulseMax};
+      let min=Math.max(.1,Math.min(20,Number(rr.min??p.globalPulseMin)||1));
+      let max=Math.max(.1,Math.min(20,Number(rr.max??p.globalPulseMax)||min));
       if(min>max)[min,max]=[max,min];
       return {min,max};
     }
@@ -491,7 +663,7 @@ function rateFor(name,isPause){
       if(rateChangeTimer || rateHoldTimer) return;
       smoothDynamicRate();
     }
-    function nextRound(){if(!running)return;if(phase==='pause'){root.classList.remove('surprise-active');const a=getChoices();if(!a.length){statusEl.textContent='Βάλε τουλάχιστον μία επιλογή ενέργειας.';stop();return}const chosen=pick();const range=getEnergyRange(chosen);let lo=range.min,hi=range.max;if(lo>hi)[lo,hi]=[hi,lo];const seconds=Math.floor(Math.random()*(hi-lo+1))+lo;choiceEl.textContent=chosen;totalMs=seconds*1000;endAt=Date.now()+totalMs;phase='energy';startPulse(randomRate(rateFor(chosen,false)));startDynamicEnergyRate();statusEl.textContent='ΕΝΕΡΓΕΙΑ — μετράει αντίστροφα…';tick();return}let lo=Math.max(0,Math.floor(Number(pauseMinEl.value)||0)),hi=Math.max(0,Math.floor(Number(pauseMaxEl.value)||0));if(lo>hi)[lo,hi]=[hi,lo];const seconds=Math.floor(Math.random()*(hi-lo+1))+lo;choiceEl.textContent=pickPause();totalMs=seconds*1000;endAt=Date.now()+totalMs;stopPulse();pulseBtn.classList.remove('on');pulseBtn.classList.add('pause-on');phase='pause';statusEl.textContent='ΠΑΥΣΗ — μετράει αντίστροφα…';tick()}
+    function nextRound(){if(!running)return;if(phase==='pause'){root.classList.remove('surprise-active');const a=getChoices();if(!a.length){statusEl.textContent='Βάλε τουλάχιστον μία επιλογή ενέργειας.';stop();return}const chosen=pick();const range=getEnergyRange(chosen);let lo=range.min,hi=range.max;if(lo>hi)[lo,hi]=[hi,lo];const seconds=Math.floor(Math.random()*(hi-lo+1))+lo;choiceEl.textContent=chosen;totalMs=seconds*1000;endAt=Date.now()+totalMs;phase='energy';startPulse(randomRate(rateFor(chosen,false)));startDynamicEnergyRate();statusEl.textContent='ΕΝΕΡΓΕΙΑ — μετράει αντίστροφα…';tick();return}let lo=Math.max(0,Math.floor(Number(pauseMinEl.value)||0)),hi=Math.max(0,Math.floor(Number(pauseMaxEl.value)||0));if(lo>hi)[lo,hi]=[hi,lo];const seconds=Math.floor(Math.random()*(hi-lo+1))+lo;const pauseName=pickPause();choiceEl.textContent=pauseName;totalMs=seconds*1000;endAt=Date.now()+totalMs;phase='pause';const pauseRate=rateFor(pauseName,true);if(pauseRate){startPulse(randomRate(pauseRate));}else{stopPulse();pulseBtn.classList.remove('on','pulse-on','active');pulseBtn.classList.add('pause-on');}statusEl.textContent='ΠΑΥΣΗ — μετράει αντίστροφα…';tick()}
     function tick(){if(!running||paused)return;sessionElapsedMs=Date.now()-sessionStartAt;
       const p=programs[currentProgram];
       const sessionTotalMs=Math.max(1,Number(p._sessionTotalSeconds||p.sessionTotal*60||30*60))*1000;
@@ -532,9 +704,13 @@ function rateFor(name,isPause){
         startBtn.textContent='PAUSE';
         if(phase==='energy'){startPulse(pulseRate||randomRate(rateFor(choiceEl.textContent,false)));startDynamicEnergyRate();}
         else{
-          stopPulse();
-          pulseBtn.classList.remove('on');
-          pulseBtn.classList.add('pause-on');
+          const pr=rateFor(choiceEl.textContent,true);
+          if(pr) startPulse(randomRate(pr));
+          else {
+            stopPulse();
+            pulseBtn.classList.remove('on');
+            pulseBtn.classList.add('pause-on');
+          }
         }
         tick();
       }
@@ -551,7 +727,7 @@ function rateFor(name,isPause){
       pulseAudio.load();
     }
     function playPulseBeep(){
-      if(pulseMuted||!pulseAudio||!running||paused||phase!=='energy')return;
+      if(pulseMuted||!pulseAudio||!running||paused)return;
       try{pulseAudio.pause();pulseAudio.currentTime=0;const p=pulseAudio.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}
     }
     function updateMuteButton(){
@@ -562,7 +738,7 @@ function rateFor(name,isPause){
     pulseMuteBtn.addEventListener('click',()=>{
       pulseMuted=!pulseMuted;
       updateMuteButton();
-      if(!pulseMuted&&running&&!paused&&phase==='energy')playPulseBeep();
+      if(!pulseMuted&&running&&!paused)playPulseBeep();
     });
     updateMuteButton();
     function startPulse(hz){
@@ -572,11 +748,11 @@ function rateFor(name,isPause){
       pulseBeatIndex=-1;
       initPulseAudio();
       // First beep is exactly when the green pulse starts.
-      pulseBtn.classList.add('on');
+      pulseBtn.classList.add('on'); if(phase==='pause') pulseBtn.classList.add('pause-on');
       if(!pulseMuted)playPulseBeep();
       pulseBeatIndex=0;
       pulseTimer=setInterval(()=>{
-        if(!running||paused||phase!=='energy')return;
+        if(!running||paused)return;
         const elapsed=performance.now()-pulsePhaseAt;
         const period=1000/pulseRate;
         const beatIndex=Math.floor(elapsed/period);
@@ -623,6 +799,26 @@ function rateFor(name,isPause){
       const inputs=energyEditorEl.querySelectorAll('[data-energy-name]');
       if(inputs.length) inputs[inputs.length-1].focus();
     });pauseChoicesEl.addEventListener('input',()=>{readRateEditors();renderRateEditors()});
+    pauseRatesEl.addEventListener('input',e=>{
+      const el=e.target.closest('input[data-rate-kind="pause"]');
+      if(!el)return;
+      el.classList.toggle('has-own-value',el.value.trim()!=='');
+      readRateEditors();
+      saveProgram();
+    });
+    pauseRatesEl.addEventListener('click',e=>{
+      const btn=e.target.closest('[data-pause-delete]');
+      if(!btn)return;
+      const i=Number(btn.dataset.pauseDelete);
+      const rows=getLines(pauseChoicesEl);
+      if(i<0||i>=rows.length)return;
+      const deleted=rows[i];
+      rows.splice(i,1);
+      pauseChoicesEl.value=rows.join('\n');
+      if(p&&p.pauseRates) delete p.pauseRates[deleted];
+      saveProgram();
+      renderRateEditors();
+    });
     /* ENERGY_DELETE_HANDLER */
     energyEditorEl.addEventListener('click',e=>{
       const btn=e.target.closest('[data-energy-delete]');
@@ -826,12 +1022,12 @@ function rateFor(name,isPause){
       result.className='rct-wheel-result';result.textContent='';rouletteWheel.appendChild(result);
       rouletteOverlay.style.display='flex';
       rouletteSpinBtn.disabled=false;rouletteContinueBtn.disabled=true;
-      rouletteHint.textContent='Πάτησε τον τροχό για να γυρίσει!';
+      rouletteHint.textContent="";
 
       rouletteSpinBtn.onclick=()=>{
         if(rouletteWheel.dataset.spinDone==='1')return;
         rouletteSpinBtn.disabled=true;
-        rouletteHint.textContent='Η ρουλέτα γυρίζει…';
+        rouletteHint.textContent="";
         const centerAngle=chosenSlice*step+step/2;
         const finalRotation=360*6+(-90-centerAngle);
         svg.style.transition='none';
@@ -846,7 +1042,7 @@ function rateFor(name,isPause){
           result.textContent=options[rouletteWinner];
           result.classList.add('show');
           rouletteWheel.dataset.spinDone='1';
-          rouletteHint.textContent='Η επιλογή έγινε.';
+          rouletteHint.textContent="";
           rouletteContinueBtn.disabled=false;
         },4700);
         rouletteWheel._spinTimeout=done;
@@ -965,5 +1161,19 @@ function rateFor(name,isPause){
     window.rctClearRoulettes=clearRouletteTimers;
     window.rctState={getProgram:()=>programs[currentProgram],getIndex:()=>currentProgram,save:()=>persistPrograms()};
   })();
-  </script>
+  
+// v27: clicking anywhere on the roulette wheel starts the spin
+(function(){
+  const wheel = document.getElementById('rouletteWheel');
+  const spinBtn = document.getElementById('rouletteSpinBtn');
+  if(!wheel || !spinBtn) return;
+  wheel.style.cursor = 'pointer';
+  wheel.addEventListener('click', function(e){
+    // If the click is on the button itself, let its own handler handle it.
+    if(e.target.closest('#rouletteSpinBtn')) return;
+    spinBtn.click();
+  });
+})();
+
+</script>
 </div>
