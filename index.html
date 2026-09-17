@@ -498,9 +498,9 @@ function renderExtraEditor(){
       '<span class="rt-unit">–</span>'+
       '<input class="inherited-value" type="number" min="0" max="86400" step="1" placeholder="—" data-extra-time-max="'+i+'" value="'+(s.timeMax??'')+'">'+
       '<span class="rt-unit">παλμοί/sec</span>'+
-      '<input class="inherited-value" type="number" min="0" max="20" step="0.1" placeholder="—" data-extra-pulse-min="'+i+'" value="'+(s.pulseMin??0)+'">'+
+      '<input class="inherited-value" type="number" min="0" max="20" step="0.01" placeholder="—" data-extra-pulse-min="'+i+'" value="'+(s.pulseMin??0)+'">'+
       '<span class="rt-unit">–</span>'+
-      '<input class="inherited-value" type="number" min="0" max="20" step="0.1" placeholder="—" data-extra-pulse-max="'+i+'" value="'+(s.pulseMax??0)+'">'+
+      '<input class="inherited-value" type="number" min="0" max="20" step="0.01" placeholder="—" data-extra-pulse-max="'+i+'" value="'+(s.pulseMax??0)+'">'+
       '<span class="rt-unit">βάρος %</span>'+
       '<input class="energy-weight-input" type="number" min="0" max="100" step="1" data-extra-weight="'+i+'" value="'+w+'">'+
       '<button type="button" class="rt-danger" data-extra-delete="'+i+'" title="Διαγραφή">✕</button>'+
@@ -530,7 +530,11 @@ function readExtraEditor(){
     }else if(el.value.trim()===''){
       delete p.extraSettings[name][key];
     }else{
-      p.extraSettings[name][key]=Number(el.value);
+      const raw=String(el.value).trim().replace(',','.');
+      const n=Number(raw);
+      if(Number.isFinite(n)){
+        p.extraSettings[name][key]=n;
+      }
     }
   });
   // Preserve weight=100 even when no other settings exist.
