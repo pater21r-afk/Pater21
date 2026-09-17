@@ -498,9 +498,9 @@ function renderExtraEditor(){
       '<span class="rt-unit">–</span>'+
       '<input class="inherited-value" type="number" min="0" max="86400" step="1" placeholder="—" data-extra-time-max="'+i+'" value="'+(s.timeMax??'')+'">'+
       '<span class="rt-unit">παλμοί/sec</span>'+
-      '<input class="inherited-value" type="number" min="0.1" max="20" step="0.1" placeholder="—" data-extra-pulse-min="'+i+'" value="'+(s.pulseMin??0)+'">'+
+      '<input class="inherited-value" type="number" min="0" max="20" step="0.1" placeholder="—" data-extra-pulse-min="'+i+'" value="'+(s.pulseMin??0)+'">'+
       '<span class="rt-unit">–</span>'+
-      '<input class="inherited-value" type="number" min="0.1" max="20" step="0.1" placeholder="—" data-extra-pulse-max="'+i+'" value="'+(s.pulseMax??0)+'">'+
+      '<input class="inherited-value" type="number" min="0" max="20" step="0.1" placeholder="—" data-extra-pulse-max="'+i+'" value="'+(s.pulseMax??0)+'">'+
       '<span class="rt-unit">βάρος %</span>'+
       '<input class="energy-weight-input" type="number" min="0" max="100" step="1" data-extra-weight="'+i+'" value="'+w+'">'+
       '<button type="button" class="rt-danger" data-extra-delete="'+i+'" title="Διαγραφή">✕</button>'+
@@ -898,12 +898,14 @@ function hideExtra(){
     let rateHoldTimer=null;
     function smoothDynamicRate(){}
     function startDynamicEnergyRate(){}
-    function nextRound(){if(!running)return;if(phase==='pause'){root.classList.remove('surprise-active');const a=getChoices();if(!a.length){statusEl.textContent='Βάλε τουλάχιστον μία επιλογή ενέργειας.';stop();return}const chosen=pick();const range=getEnergyRange(chosen);let lo=range.min,hi=range.max;if(lo>hi)[lo,hi]=[hi,lo];const seconds=Math.floor(Math.random()*(hi-lo+1))+lo;choiceEl.textContent=chosen;totalMs=seconds*1000;endAt=Date.now()+totalMs;phase='energy';showExtraForEnergy(seconds);startPulse(randomRate(rateFor(chosen,false)),rateFor(chosen,false));startDynamicEnergyRate();statusEl.textContent='ΕΝΕΡΓΕΙΑ — μετράει αντίστροφα…';tick();return}const pauseName=pickPause();let prange=getPauseRange(pauseName),lo=Math.max(0,Math.floor(prange.min)),hi=Math.max(0,Math.floor(prange.max));if(lo>hi)[lo,hi]=[hi,lo];const seconds=Math.floor(Math.random()*(hi-lo+1))+lo;choiceEl.textContent=pauseName;totalMs=seconds*1000;endAt=Date.now()+totalMs;phase='pause';continueExtrasIntoPause();const pauseRate=rateFor(pauseName,true);
+    function nextRound(){if(!running)return;if(phase==='pause'){root.classList.remove('surprise-active');const a=getChoices();if(!a.length){statusEl.textContent='Βάλε τουλάχιστον μία επιλογή ενέργειας.';stop();return}const chosen=pick();const range=getEnergyRange(chosen);let lo=range.min,hi=range.max;if(lo>hi)[lo,hi]=[hi,lo];const seconds=Math.floor(Math.random()*(hi-lo+1))+lo;choiceEl.textContent=chosen;totalMs=seconds*1000;endAt=Date.now()+totalMs;phase='energy';showExtraForEnergy(seconds);pulseBtn.classList.remove('pause-on');pulseBtn.classList.remove('on','pulse-on','active');startPulse(randomRate(rateFor(chosen,false)),rateFor(chosen,false));startDynamicEnergyRate();statusEl.textContent='ΕΝΕΡΓΕΙΑ — μετράει αντίστροφα…';tick();return}const pauseName=pickPause();let prange=getPauseRange(pauseName),lo=Math.max(0,Math.floor(prange.min)),hi=Math.max(0,Math.floor(prange.max));if(lo>hi)[lo,hi]=[hi,lo];const seconds=Math.floor(Math.random()*(hi-lo+1))+lo;choiceEl.textContent=pauseName;totalMs=seconds*1000;endAt=Date.now()+totalMs;phase='pause';continueExtrasIntoPause();const pauseRate=rateFor(pauseName,true);
 if(pauseRate){
   startPulse(randomRate(pauseRate),pauseRate);
 }else{
   stopPulse();
   pulseBtn.classList.remove('on','pulse-on','active');
+  pulseBtn.classList.remove('pause-on');
+  void pulseBtn.offsetWidth;
   pulseBtn.classList.add('pause-on');
 }statusEl.textContent='ΠΑΥΣΗ — μετράει αντίστροφα…';tick()}
     function tick(){if(!running||paused)return;sessionElapsedMs=Date.now()-sessionStartAt;
@@ -986,7 +988,7 @@ if(pauseRate){
     function startPulse(hz, pulseRange){
       if(pulseTimer){clearInterval(pulseTimer);pulseTimer=null}
 
-      const MIN_HZ=0.7;
+      const MIN_HZ=0.01;
       const MAX_HZ=20;
       const range=(pulseRange && Number.isFinite(Number(pulseRange.min)) && Number.isFinite(Number(pulseRange.max)))
         ? {min:Math.max(MIN_HZ,Number(pulseRange.min)),max:Math.min(MAX_HZ,Number(pulseRange.max))}
