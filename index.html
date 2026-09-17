@@ -727,15 +727,43 @@ function updateExtraPulseVisual(){
   const items=[...extraBox.querySelectorAll('.rt-extra-item')];
   const settings=programs[currentProgram].extraSettings||{};
 
-  // Each EXTRA pulses independently according to its own pulse setting.
-  // 0 means no pulse. Having multiple EXTRAs does not force them all to pulse.
+  // Each EXTRA pulses independently. 0 means no pulse.
+  // A value such as 0.1 means one pulse every 10 seconds.
   items.forEach(item=>{
     const name=item.dataset.extraName || item.textContent.trim();
     const cfg=settings[name]||{};
-    const min=Number(cfg.pulseMin??0);
-    const max=Number(cfg.pulseMax??0);
-    const hasPulse=(Number.isFinite(min)&&min>0)||(Number.isFinite(max)&&max>0);
-    item.classList.toggle('extra-item-pulse',hasPulse);
+    const min=Math.max(0,Number(cfg.pulseMin??0));
+    const max=Math.max(0,Number(cfg.pulseMax??0));
+
+    if(!Number.isFinite(min) || !Number.isFinite(max) || (min<=0 && max<=0)){
+      item.classList.remove('extra-item-pulse');
+      if(item.__extraPulseTimer){clearTimeout(item.__extraPulseTimer);item.__extraPulseTimer=null;}
+      return;
+    }
+
+    const lo=Math.min(min,max), hi=Math.max(min,max);
+    const hz=lo===hi?lo:lo+Math.random()*(hi-lo);
+    if(hz<=0){
+      item.classList.remove('extra-item-pulse');
+      return;
+    }
+
+    // Do NOT use the global startPulse() here; its 0.7-Hz minimum is for
+    // the main action/pause pulse engine. EXTRAs may use lower frequencies.
+    if(item.__extraPulseTimer)clearTimeout(item.__extraPulseTimer);
+
+    const period=1000/hz;
+    const beat=()=>{
+      if(!item.isConnected)return;
+      item.classList.add('extra-item-pulse');
+      clearTimeout(item.__extraPulseOffTimer);
+      item.__extraPulseOffTimer=setTimeout(()=>{
+        if(item.isConnected)item.classList.remove('extra-item-pulse');
+      },Math.min(220,period*0.35));
+
+      item.__extraPulseTimer=setTimeout(beat,period);
+    };
+    item.__extraPulseTimer=setTimeout(beat,period);
   });
 }
 
@@ -818,6 +846,8 @@ function createRunningExtra(state){
     // Each yellow box has its own countdown. If several are visible,
     // each bar drains independently.
     if(remaining<=0){
+      if(item.__extraPulseTimer)clearTimeout(item.__extraPulseTimer);
+      if(item.__extraPulseOffTimer)clearTimeout(item.__extraPulseOffTimer);
       item.remove();
       clearInterval(interval);
       if(window.__rctActiveExtras.get(state.name)===state){
@@ -855,6 +885,10 @@ function hideExtra(){
     window.__rctActiveExtras.clear();
   }
   if(extraBox){
+      extraBox.querySelectorAll('.rt-extra-item').forEach(item=>{
+        if(item.__extraPulseTimer)clearTimeout(item.__extraPulseTimer);
+        if(item.__extraPulseOffTimer)clearTimeout(item.__extraPulseOffTimer);
+      });
     extraBox.innerHTML='';
     extraBox.style.display='none';
     
