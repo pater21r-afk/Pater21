@@ -727,43 +727,53 @@ function updateExtraPulseVisual(){
   const items=[...extraBox.querySelectorAll('.rt-extra-item')];
   const settings=programs[currentProgram].extraSettings||{};
 
-  // Each EXTRA pulses independently. 0 means no pulse.
-  // A value such as 0.1 means one pulse every 10 seconds.
   items.forEach(item=>{
     const name=item.dataset.extraName || item.textContent.trim();
     const cfg=settings[name]||{};
-    const min=Math.max(0,Number(cfg.pulseMin??0));
-    const max=Math.max(0,Number(cfg.pulseMax??0));
+    let lo=Number(String(cfg.pulseMin??0).replace(',','.'));
+    let hi=Number(String(cfg.pulseMax??0).replace(',','.'));
+    if(!Number.isFinite(lo))lo=0;
+    if(!Number.isFinite(hi))hi=0;
+    lo=Math.max(0,lo); hi=Math.max(0,hi);
+    if(lo>hi)[lo,hi]=[hi,lo];
 
-    if(!Number.isFinite(min) || !Number.isFinite(max) || (min<=0 && max<=0)){
+    // 0 means no pulse.
+    if(hi<=0){
+      if(item.__extraPulseTimer)clearTimeout(item.__extraPulseTimer);
+      if(item.__extraPulseOffTimer)clearTimeout(item.__extraPulseOffTimer);
+      item.__extraPulseTimer=null;
+      item.__extraPulseOffTimer=null;
       item.classList.remove('extra-item-pulse');
-      if(item.__extraPulseTimer){clearTimeout(item.__extraPulseTimer);item.__extraPulseTimer=null;}
       return;
     }
 
-    const lo=Math.min(min,max), hi=Math.max(min,max);
-    const hz=lo===hi?lo:lo+Math.random()*(hi-lo);
-    if(hz<=0){
-      item.classList.remove('extra-item-pulse');
-      return;
-    }
+    if(item.__extraPulseTimer)return;
 
-    // Do NOT use the global startPulse() here; its 0.7-Hz minimum is for
-    // the main action/pause pulse engine. EXTRAs may use lower frequencies.
-    if(item.__extraPulseTimer)clearTimeout(item.__extraPulseTimer);
-
-    const period=1000/hz;
-    const beat=()=>{
+    const scheduleBeat=()=>{
       if(!item.isConnected)return;
+
+      const hz=(lo===hi)?lo:(lo+Math.random()*(hi-lo));
+      if(hz<=0)return;
+      const period=1000/hz;
+
+      // Start the visual beat.
+      item.classList.remove('extra-item-pulse');
+      void item.offsetWidth;
       item.classList.add('extra-item-pulse');
+
       clearTimeout(item.__extraPulseOffTimer);
       item.__extraPulseOffTimer=setTimeout(()=>{
         if(item.isConnected)item.classList.remove('extra-item-pulse');
-      },Math.min(220,period*0.35));
+      },Math.min(320,Math.max(120,period*0.28)));
 
-      item.__extraPulseTimer=setTimeout(beat,period);
+      item.__extraPulseTimer=setTimeout(()=>{
+        item.__extraPulseTimer=null;
+        scheduleBeat();
+      },period);
     };
-    item.__extraPulseTimer=setTimeout(beat,period);
+
+    // First beat immediately when the EXTRA becomes active.
+    scheduleBeat();
   });
 }
 
@@ -848,6 +858,10 @@ function createRunningExtra(state){
     if(remaining<=0){
       if(item.__extraPulseTimer)clearTimeout(item.__extraPulseTimer);
       if(item.__extraPulseOffTimer)clearTimeout(item.__extraPulseOffTimer);
+      if(item.__extraPulseTimer)clearTimeout(item.__extraPulseTimer);
+      if(item.__extraPulseOffTimer)clearTimeout(item.__extraPulseOffTimer);
+      item.__extraPulseTimer=null;
+      item.__extraPulseOffTimer=null;
       item.remove();
       clearInterval(interval);
       if(window.__rctActiveExtras.get(state.name)===state){
@@ -1640,13 +1654,11 @@ addEnergyBtn.addEventListener('click',()=>{
 #pageRun .rt-extra-item > *{position:relative;z-index:1}
 #pageRun .rt-extra-item + .rt-extra-item{margin-top:6px}
 #pageRun .rt-extra-item.extra-item-pulse{
-  animation:rctExtraPulseV55 .55s ease-in-out infinite alternate;
+  animation:rctExtraPulseV58 .38s ease-in-out infinite alternate;
   transform-origin:center;
 }
-@keyframes rctExtraPulseV55{
-  from{transform:scale(1);box-shadow:0 3px 12px rgba(0,0,0,.22)}
-  to{transform:scale(1.045);box-shadow:0 0 28px rgba(255,212,59,.98)}
-}
-  to{transform:scale(1.045);box-shadow:0 0 28px rgba(255,212,59,.98)}
+@keyframes rctExtraPulseV58{
+  from{transform:scale(1);filter:brightness(1);box-shadow:0 3px 12px rgba(0,0,0,.22)}
+  to{transform:scale(1.07);filter:brightness(1.35);box-shadow:0 0 48px rgba(255,212,59,1),0 0 18px rgba(255,255,255,.9)}
 }
 </style>
